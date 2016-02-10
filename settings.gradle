@@ -1,0 +1,12 @@
+rootProject.name = 'gawain'
+include 'extensions'
+include 'core'
+include 'extensions/mongodb'
+include 'extensions/activemq'
+include 'extensions/jdbc'
+findProject(':extensions')?.name = 'gawain-extensions'
+findProject(':extensions:mongodb')?.name = 'gawain-mongodb'
+findProject(':extensions:activemq')?.name = 'gawain-activemq'
+findProject(':extensions:jdbc')?.name = 'gawain-jdbc'
+findProject(':core')?.name = 'gawain-core'
+
