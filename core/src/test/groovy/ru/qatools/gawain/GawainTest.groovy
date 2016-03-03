@@ -7,6 +7,7 @@ import ru.qatools.gawain.builders.QueueBuilder
 import ru.qatools.gawain.builders.RepoBuilder
 
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicInteger
 
 import static com.jayway.awaitility.Awaitility.await
 import static java.util.concurrent.TimeUnit.MILLISECONDS
@@ -55,8 +56,8 @@ class GawainTest {
                         state.evt = evt
                     }
             doEvery(300, MILLISECONDS, {
-                repo('input').keys().each { key ->
-                    repo('input').with(key, { it.ticks += 1 })
+                repo('input').withEach { key, state ->
+                    state.ticks += 1
                 }
             })
         }
@@ -157,6 +158,27 @@ class GawainTest {
         assertThat(gawain.repo('all')['all'].all, containsInAnyOrder(
                 ((0..4 as List).collect { "event${it}proc" }).toArray()
         ))
+    }
+
+    @Test
+    public void testMultipleSchedulers() throws Exception {
+        def globalCounter = new AtomicInteger()
+        def localCounter = new AtomicInteger()
+        def repo = new ConcurrentHashMapRepository()
+        def repoBuilder = { name, opts -> repo }
+        Gawain.run("first") {
+            useRepoBuilder(repoBuilder)
+            doEvery(100, MILLISECONDS, { globalCounter.incrementAndGet() }, global: true)
+            doEvery(100, MILLISECONDS, { localCounter.incrementAndGet() }, global: false)
+        }
+        Gawain.run("second") {
+            useRepoBuilder(repoBuilder)
+            doEvery(100, MILLISECONDS, { globalCounter.incrementAndGet() }, global: true)
+            doEvery(100, MILLISECONDS, { localCounter.incrementAndGet() }, global: false)
+        }
+        sleep(1000)
+        assertThat(globalCounter.get(), allOf(greaterThanOrEqualTo(9), lessThanOrEqualTo(11)))
+        assertThat(localCounter.get(), allOf(greaterThanOrEqualTo(19), lessThanOrEqualTo(21)))
     }
 
 

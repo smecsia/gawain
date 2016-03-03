@@ -1,4 +1,4 @@
-package ru.qatools.gawain.mongodb
+package ru.qatools.gawain.jdbc
 
 import groovy.transform.CompileStatic
 import org.h2.jdbc.JdbcSQLException
@@ -31,7 +31,6 @@ class PessimisticLockTest {
     public void pessimistic_locking_exercise() throws SQLException {
         // first, jack bauer inserts a field agent report
         Connection connJack = getConnection()
-        connJack.setAutoCommit(false);
         def key = 'CTU Field'
         connJack.createStatement().execute("insert into items (name, release_date) values ('${key}', current_date() - 100)");
         connJack.commit();
@@ -45,9 +44,7 @@ class PessimisticLockTest {
         // then habib shows up and tries to update the row, but
         // cannot. An Exception is being thrown
         Connection habibConn = getConnection()
-        habibConn.setAutoCommit(false);
-        habibConn.createStatement()
-                .executeUpdate("update items set release_date = current_date() + 10  where name = '${key}'");
+        habibConn.createStatement().execute("select * from items where name = '${key}' for update");
 
         fail("We should never be able to get to this line, because an exception is thrown");
     }

@@ -27,15 +27,32 @@ class Gawain<E> implements Router<E> {
     static final Opts DEFAULT_OPTS = new Opts()
     public static final String DEFAULT_NAME = "router"
     String name
-    List<Timer> timers = []
-    Map<String, Processor> processors = [:]
-    Map<String, Opts> opts = [:]
-    Map<String, Broadcaster> broadcasters = [:]
-    Repository timersRepo
-    QueueBuilder queueBuilder = new BasicQueueBuilder()
-    RepoBuilder repoBuilder = new BasicRepoBuilder()
-    BroadcastBuilder bcBuilder = new BasicBroadcastBuilder()
-    ThreadPoolBuilder threadPoolBuilder = new BasicThreadPoolBuilder()
+    private Map<String, Processor> processors = [:]
+    private Map<String, Opts> opts = [:]
+    private Map<String, Broadcaster> broadcasters = [:]
+    private Repository timersRepo
+    private QueueBuilder queueBuilder = new BasicQueueBuilder()
+    private RepoBuilder repoBuilder = new BasicRepoBuilder()
+    private BroadcastBuilder bcBuilder = new BasicBroadcastBuilder()
+    private ThreadPoolBuilder threadPoolBuilder = new BasicThreadPoolBuilder()
+    private Scheduler scheduler
+
+    private Gawain() {
+
+    }
+
+    private init() {
+        scheduler?.start()
+        processors.values().each { p ->
+            Integer tCount = opts(p.name).consumers
+            LOGGER.info("[${name}][${p.name}] Starting ${tCount} consumers...")
+            def tp = newFixedThreadPool(tCount)
+            tCount.times { idx ->
+                LOGGER.info("[${name}][${p.name}#${idx}] Starting consumer...")
+                tp.submit { p.run("${idx}") }
+            }
+        }
+    }
 
     // DSL
 
@@ -50,37 +67,40 @@ class Gawain<E> implements Router<E> {
     }
 
     def useBroadcastBuilder(BroadcastBuilder builder) {
-        bcBuilder = builder
+        this.bcBuilder = builder
     }
 
     def useQueueBuilder(QueueBuilder builder) {
-        queueBuilder = builder
+        this.queueBuilder = builder
     }
 
     def useRepoBuilder(RepoBuilder builder) {
-        repoBuilder = builder
+        this.repoBuilder = builder
+    }
+
+    def useScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler
     }
 
     def useThreadPoolBuilder(BasicThreadPoolBuilder builder) {
-        threadPoolBuilder = builder
+        this.threadPoolBuilder = builder
     }
 
     Repository repo(String name) {
         processors[name] instanceof Aggregator ? ((Aggregator) processors[name]).repo : null
     }
 
-    def doEvery(int frequency, TimeUnit unit, GawainRun task, Opts opts = new Opts()) {
-        doEvery(frequency, unit, { task.run(this) }, opts)
+    def doEvery(int frequency, TimeUnit unit, Runnable task, Opts opts = new Opts()) {
+        doEvery(frequency, unit, { task.run() }, opts)
     }
 
-    def doEvery(int frequency, TimeUnit unit, Closure task, Opts opts = new Opts()) {
-        def self = this
-        def timer = new Timer()
-        timer.schedule({
-            LOGGER.trace("Invoking timer with freq {} {} for {}", frequency, unit, task)
-            self.with(task)
-        }, new Random().nextInt(100), unit.toMillis(frequency))
-        timers << timer
+    def doEvery(Map opts = [:], int frequency, TimeUnit unit, Closure task) {
+        doEvery(frequency, unit, task, new Opts(opts))
+    }
+
+    def doEvery(int frequency, TimeUnit unit, Closure task, Opts opts) {
+        scheduler = scheduler ?: new Scheduler(name, repoBuilder.build('__scheduler__', opts))
+        scheduler.addJob(frequency, unit, task, opts)
     }
 
     Aggregator aggregator(String name, Filter filter, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
@@ -158,15 +178,7 @@ class Gawain<E> implements Router<E> {
     static <E> Gawain<E> run(String name, Closure strategy = {}) {
         def instance = new Gawain(name: name)
         instance.with(strategy)
-        instance.processors.values().each { p ->
-            Integer tCount = instance.opts(p.name).consumers
-            LOGGER.info("[${name}][${p.name}] Starting ${tCount} consumers...")
-            def tp = newFixedThreadPool(tCount)
-            tCount.times { idx ->
-                LOGGER.info("[${name}][${p.name}#${idx}] Starting consumer...")
-                tp.submit { p.run("${idx}") }
-            }
-        }
+        instance.init()
         instance
     }
 
@@ -195,7 +207,7 @@ class Gawain<E> implements Router<E> {
     }
 
     static long now() {
-        return currentTimeMillis()
+        currentTimeMillis()
     }
 
     static boolean timePassedSince(long time, long timestamp) {

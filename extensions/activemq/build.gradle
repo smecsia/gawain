@@ -1,7 +1,6 @@
 dependencies {
     compile project(":gawain-core")
     compile 'org.apache.activemq:activemq-pool:5.13.1'
-    compile 'de.ruedigermoeller:fst:2.45'
 
     testCompile 'ru.yandex.qatools.embed:embedded-services:1.20'
     testCompile 'org.apache.activemq:activemq-broker:5.13.1'

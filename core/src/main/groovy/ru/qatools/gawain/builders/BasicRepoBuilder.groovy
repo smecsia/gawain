@@ -11,6 +11,6 @@ class BasicRepoBuilder implements RepoBuilder {
 
     @Override
     Repository build(String name, Opts opts) {
-        new ConcurrentHashMapRepository(maxLockWaitSec: opts.maxLockWaitSec)
+        new ConcurrentHashMapRepository(maxLockWaitMs: opts.maxLockWaitMs)
     }
 }
