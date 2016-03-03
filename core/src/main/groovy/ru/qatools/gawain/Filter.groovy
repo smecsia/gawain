@@ -6,6 +6,6 @@ import groovy.transform.CompileStatic
  * @author Ilya Sadykov
  */
 @CompileStatic
-interface Filter {
-    boolean filter(event)
+interface Filter<E> {
+    boolean filter(E event)
 }

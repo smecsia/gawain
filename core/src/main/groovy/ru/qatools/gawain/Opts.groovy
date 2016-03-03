@@ -17,6 +17,10 @@ class Opts {
     boolean global = false          // indicates global or local job
     Serializer<Map> serializer = new FSTSerializer()
 
+    // Constants just for convinience
+    public static final String GLOBAL = 'global'
+    public static final String SERIALIZER = 'serializer'
+
     @Override
     Object getProperty(String name) {
         try {
@@ -45,6 +49,7 @@ class Opts {
     public static final Opts opts(Object... opts) {
         this.opts(opts as List)
     }
+
     public static final Opts opts(List opts) {
         new Opts(opts)
     }

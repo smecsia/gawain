@@ -207,6 +207,27 @@ class Gawain<E> implements Router<E> {
         new FilterImpl(callback: callback)
     }
 
+    // Syntax sugar for java
+
+    static <E> ProcessingStrategy<E> process(ProcessingStrategy<E> strategy) {
+        strategy
+    }
+
+    static <E> AggregationKey<E> key(AggregationKey<E> key) {
+        key
+    }
+
+    static <E> AggregationStrategy<E> aggregate(AggregationStrategy<E> strategy) {
+        strategy
+    }
+
+    static <E> Filter<E> filter(Filter<E> filter) {
+        filter
+    }
+
+
+    // Other helpers etc
+
     static long now() {
         currentTimeMillis()
     }

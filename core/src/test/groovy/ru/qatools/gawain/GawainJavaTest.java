@@ -13,6 +13,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static ru.qatools.gawain.Gawain.*;
+import static ru.qatools.gawain.Opts.GLOBAL;
 import static ru.qatools.gawain.Opts.opts;
 
 /**
@@ -24,21 +26,25 @@ public class GawainJavaTest {
     @Test
     public void testSimpleRoute() throws Exception {
         final Gawain gawain = Gawain.run(r -> {
-            r.processor("input", evt -> !"event3".equals(evt),
-                    (evt) -> evt + "proc").to("all");
+            r.processor("input",
+                    filter(evt -> !"event3".equals(evt)),
+                    process((evt) -> evt + "proc")
+            ).to("all");
 
-            r.aggregator("all", evt -> "all", (state, evt) -> {
-                if (!state.keySet().contains("events")) {
-                    state.put("events", new ArrayList<>());
-                    state.put("timer", 0);
-                }
-                ((List) state.get("events")).add(evt);
-                return state;
-            });
+            r.aggregator("all", key(evt -> "all"),
+                    aggregate((state, evt) -> {
+                        if (!state.keySet().contains("events")) {
+                            state.put("events", new ArrayList<>());
+                            state.put("timer", 0);
+                        }
+                        ((List) state.get("events")).add(evt);
+                        return state;
+                    })
+            );
 
             r.doEvery(300, MILLISECONDS, () ->
                     r.repo("all").withEach((key, state) ->
-                            state.put("timer", (int) state.get("timer") + 1)), opts("global", true)
+                            state.put("timer", (int) state.get("timer") + 1)), opts(GLOBAL, true)
             );
         });
 
