@@ -59,11 +59,15 @@ class Processor {
         executor.awaitTermination(terminationWaitMs, TimeUnit.MILLISECONDS)
     }
 
-    public Processor to(String name) {
-        outputs << { event -> router.to(name, event) }; this
+    public Processor to(String... names) {
+        names.each { String name ->
+            outputs << { event -> router.to(name, event) }
+        }; this
     }
 
-    public Processor broadcast(String name) {
-        outputs << { event -> router.broadcast(name, event) }; this
+    public Processor broadcast(String... names) {
+        names.each { String name ->
+            outputs << { event -> router.broadcast(name, event) }
+        }; this
     }
 }

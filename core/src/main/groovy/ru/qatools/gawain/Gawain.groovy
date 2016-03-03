@@ -57,10 +57,12 @@ class Gawain<E> implements Router<E> {
 
     // DSL
 
-    def to(String name, E event) {
-        opt(processors[name]).orElseThrow({
-            new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
-        }).add(event)
+    def to(String name, E... events) {
+        events.toList().each { event ->
+            opt(processors[name]).orElseThrow({
+                new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
+            }).add(event)
+        }
     }
 
     def broadcast(String name, E event) {
@@ -119,7 +121,7 @@ class Gawain<E> implements Router<E> {
         )
     }
 
-    Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
+    Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy, Opts opts) {
         this.broadcasters[name] = getOrCreateBroadcaster(name)
         this.opts[name] = opts
         this.processors[name] = new Processor(
@@ -132,27 +134,31 @@ class Gawain<E> implements Router<E> {
         )
     }
 
-    Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
+    Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts) {
         aggregator(name, null, key, strategy, opts)
     }
 
-    Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Map opts) {
+    Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key, AggregationStrategy<E> strategy) {
         aggregator(name, key, strategy, new Opts(opts))
     }
 
-    Processor processor(String name, ProcessingStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
+    Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy) {
+        processor(name, filter, strategy, DEFAULT_OPTS)
+    }
+
+    Processor processor(String name, ProcessingStrategy<E> strategy, Opts opts) {
         processor(name, null, strategy, opts)
     }
 
-    Processor processor(String name, Closure strategy, Opts opts = DEFAULT_OPTS) {
+    Processor processor(String name, Closure strategy, Opts opts) {
         processor(name, process(strategy), opts)
     }
 
-    Processor processor(String name, Closure strategy, Map opts) {
+    Processor processor(Map opts = [:], String name, Closure strategy) {
         processor(name, strategy, new Opts(opts))
     }
 
-    Processor processor(String name, ProcessingStrategy<E> strategy, Map opts) {
+    Processor processor(Map opts = [:], String name, ProcessingStrategy<E> strategy) {
         processor(name, strategy, new Opts(opts))
     }
 
@@ -224,7 +230,6 @@ class Gawain<E> implements Router<E> {
     static <E> Filter<E> filter(Filter<E> filter) {
         filter
     }
-
 
     // Other helpers etc
 

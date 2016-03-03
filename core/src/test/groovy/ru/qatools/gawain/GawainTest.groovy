@@ -53,7 +53,7 @@ class GawainTest {
             processor('filter', filter { it != 'Vasya' }, process { "${it}proc" }).to('users')
             aggregator 'users', key { it }, aggregate { state, evt -> state.name = evt }
         }
-        ['Petya','Vasya','Masha'].each { gawain.to('filter', it) }
+        ['Petya', 'Vasya', 'Masha'].each { gawain.to('filter', it) }
         await().atMost(2, SECONDS).until({ gawain.repo('users').keys() }, containsInAnyOrder('Petya', 'Masha'))
     }
 
@@ -158,10 +158,10 @@ class GawainTest {
     @Test
     public void testManyConsumers() throws Exception {
         def gawain = Gawain.run {
-            processor('input', process { to('all', "${it}proc") }, [consumers: 10, processors: 10])
+            processor('input', process { to('all', "${it}proc") }, consumers: 10, processors: 10)
             aggregator('all', key { 'all' }, aggregate { state, evt ->
                 state.all = (state.all ?: []) << evt
-            }, [consumers: 10, processors: 10])
+            }, consumers: 10, processors: 10)
         }
         5.times { gawain.to('input', "event${it}") }
         await().atMost(2, SECONDS).until({ gawain.repo('all')['all'].all.size() }, equalTo(5))
@@ -191,5 +191,21 @@ class GawainTest {
         assertThat(localCounter.get(), allOf(greaterThanOrEqualTo(19), lessThanOrEqualTo(21)))
     }
 
-
+    @Test
+    public void testChangeTypeOfEvent() throws Exception {
+        def gawain = Gawain.run {
+            processor('input', process { [name: it] }).to('second')
+            processor('second', process { [object: it] }).to('all')
+            aggregator('all', key { 'all' }, aggregate { s, e ->
+                s.events = s.events ?: []
+                s.events << e
+            })
+        }
+        gawain.to('input', 'Vasya')
+        gawain.to('input', 'Petya')
+        gawain.to('input', 'Masha')
+        await().atMost(2, SECONDS).until({ gawain.repo('all')['all'].events.size() }, equalTo(3))
+        def state = gawain.repo('all')['all']
+        assertThat(state.events, containsInAnyOrder('Vasya', 'Petya', 'Masha'))
+    }
 }
