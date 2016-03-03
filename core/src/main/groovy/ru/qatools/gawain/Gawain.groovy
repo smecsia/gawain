@@ -57,12 +57,10 @@ class Gawain<E> implements Router<E> {
 
     // DSL
 
-    def to(String name, E... events) {
-        events.toList().each { event ->
-            opt(processors[name]).orElseThrow({
-                new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
-            }).add(event)
-        }
+    def to(String name, E event) {
+        opt(processors[name]).orElseThrow({
+            new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
+        }).add(event)
     }
 
     def broadcast(String name, E event) {

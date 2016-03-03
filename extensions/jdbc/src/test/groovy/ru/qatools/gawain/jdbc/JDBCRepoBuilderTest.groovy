@@ -1,6 +1,8 @@
 package ru.qatools.gawain.jdbc
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import ru.qatools.gawain.Opts
 
 import static org.hamcrest.CoreMatchers.equalTo
@@ -9,12 +11,12 @@ import static org.junit.Assert.assertThat
 /**
  * @author Ilya Sadykov
  */
-class JDBCRepoBuilderTest extends AbstractJDBCTest {
+@RunWith(Parameterized)
+class JDBCRepoBuilderTest extends BasicDBRepoTest {
 
     @Test
     public void testLockSaveAndGet() throws Exception {
-        def repo = new JDBCRepoBuilder(createConnection())
-                .build('repo1', new Opts(maxLockWaitMs: 500))
+        def repo = builder.build('repo1', new Opts(maxLockWaitMs: 500))
         repo.put('user', [name: 'Vasya'])
         assertThat(repo.get('user'), equalTo([name: 'Vasya'] as Map))
 

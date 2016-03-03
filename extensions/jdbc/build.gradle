@@ -2,4 +2,8 @@ dependencies {
     compile project(":gawain-core")
 
     testCompile 'com.h2database:h2:1.4.191'
+    testCompile 'com.wix:wix-embedded-mysql:1.0.3'
+    testCompile 'ru.yandex.qatools.embed:embedded-services:1.20'
+    testCompile 'mysql:mysql-connector-java:5.1.38'
+    testCompile 'org.postgresql:postgresql:9.3-1100-jdbc41'
 }

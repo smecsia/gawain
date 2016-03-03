@@ -16,12 +16,12 @@ import static ru.qatools.mongodb.util.SerializeUtil.objectToBytes
  * @author Ilya Sadykov
  */
 @CompileStatic
-class MongodbBroadcaster implements Broadcaster {
+class MongodbBroadcaster<T> implements Broadcaster<T> {
     final Logger LOGGER = LoggerFactory.getLogger(getClass())
     MongoClient mongoClient
     String consumerName
     Gawain router
-    MongoTailableQueue queue
+    MongoTailableQueue<T> queue
 
     MongodbBroadcaster(MongoClient mongoClient, String dbName,
                        String consumerName, Gawain router,
@@ -30,7 +30,7 @@ class MongodbBroadcaster implements Broadcaster {
         this.consumerName = consumerName
         this.router = router
 
-        queue = new MongoTailableQueue<>(this.class, mongoClient, dbName,
+        queue = new MongoTailableQueue<>(T, mongoClient, dbName,
                 colName(consumerName), (opts['maxSize'] ?: 100L) as long)
         queue.setSerializer({ o -> objectToBytes(o) })
         queue.setDeserializer({ Document input, Class clazz -> objectFromBytes(input, clazz) })

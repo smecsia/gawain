@@ -1,5 +1,7 @@
 package ru.qatools.gawain.jdbc
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import ru.qatools.gawain.error.LockWaitTimeoutException
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -9,11 +11,12 @@ import static org.junit.Assert.assertThat
 /**
  * @author Ilya Sadykov
  */
-class JDBCPessimisticLockingTest extends AbstractJDBCTest {
+@RunWith(Parameterized)
+class JDBCPessimisticLockingTest extends BasicDBRepoTest {
 
     @Test
     public void testLockUnlock() throws Exception {
-        def locking = new JDBCPessimisticLocking('locks', createConnection(), 10)
+        def locking = new JDBCPessimisticLocking('locks', builder.connection, 10, builder.dialect)
         def key = 'key1'
         locking.tryLock(key, 300)
         locking.tryLock(key, 300)

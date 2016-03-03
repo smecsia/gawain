@@ -4,8 +4,7 @@ import org.junit.BeforeClass
 import ru.yandex.qatools.embed.service.MongoEmbeddedService
 
 import static de.flapdoodle.embed.mongo.distribution.Version.Main.PRODUCTION
-import static java.lang.Runtime.getRuntime
-import static ru.qatools.gawain.mongodb.util.SocketUtil.findFreePort
+import static ru.qatools.gawain.util.SocketUtil.findFreePort
 
 /**
  * @author Ilya Sadykov
@@ -30,7 +29,7 @@ abstract class AbstractMongoTest {
             mongo.start();
             URL = "mongodb://${USER}:${PASS}@${mongo.getHost()}:" +
                     "${mongo.getPort()}/${DB}?replicaSet=${RS_NAME}&w=majority"
-            getRuntime().addShutdownHook(new Thread({ mongo.stop() }));
+            addShutdownHook { mongo.stop() }
         }
     }
 

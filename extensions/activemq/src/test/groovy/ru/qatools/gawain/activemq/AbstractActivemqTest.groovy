@@ -7,7 +7,7 @@ import org.junit.BeforeClass
 import ru.qatools.gawain.activemq.util.ActivemqEmbeddedService
 
 import static java.lang.Runtime.getRuntime
-import static ru.qatools.gawain.activemq.util.SocketUtil.findFreePort
+import static ru.qatools.gawain.util.SocketUtil.findFreePort
 
 /**
  * @author Ilya Sadykov

@@ -1,4 +1,4 @@
-package ru.qatools.gawain.activemq.util;
+package ru.qatools.gawain.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;

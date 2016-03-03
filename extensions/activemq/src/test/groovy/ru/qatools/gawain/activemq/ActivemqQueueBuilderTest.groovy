@@ -18,10 +18,10 @@ class ActivemqQueueBuilderTest extends AbstractActivemqTest {
     public void testActivemqQueue() throws Exception {
         def gawain = Gawain.run {
             useQueueBuilder(activemqQueueBuilder())
-            processor('input', { it }, [consumers: 10]).to('users')
+            processor('input', { it }, consumers: 10).to('users')
             aggregator('users', key { 'all' }, aggregate { state, evt ->
                 state.users = (state.users ?: []) + [evt]
-            }, [consumers: 10])
+            }, consumers: 10)
         }
         gawain.to('input', [name: 'Vasya', lastName: 'Fedorov'])
         gawain.to('input', [name: 'Petya', lastName: 'Makarov'])

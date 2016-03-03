@@ -1,6 +1,8 @@
 package ru.qatools.gawain.jdbc
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import ru.qatools.gawain.Gawain
 
 import static com.jayway.awaitility.Awaitility.await
@@ -12,12 +14,13 @@ import static org.junit.Assert.assertThat
 /**
  * @author Ilya Sadykov
  */
-class JDBCRepoTest extends AbstractJDBCTest {
+@RunWith(Parameterized)
+class JDBCRepoTest extends BasicDBRepoTest {
 
     @Test
     public void testJDBCRepo() throws Exception {
         def gawain = Gawain.run {
-            useRepoBuilder(new JDBCRepoBuilder(createConnection()))
+            useRepoBuilder(builder)
             processor('input', { it }).to('users')
             aggregator 'users', key { 'all' }, aggregate { state, evt ->
                 state.users = (state.users ?: []) + [evt]

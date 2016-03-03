@@ -12,12 +12,17 @@ import java.sql.Connection
  * @author Ilya Sadykov
  */
 class JDBCRepoBuilder implements RepoBuilder {
+    public static final String DEFAULT_TABLE = '__locks__'
     final Connection connection
     final Opts opts
     final Dialect dialect
     final JDBCPessimisticLocking locking
 
-    JDBCRepoBuilder(Connection connection, String locksTable = '__locks__',
+    JDBCRepoBuilder(Connection connection, Dialect dialect, Opts opts = new Opts()) {
+        this(connection, DEFAULT_TABLE, opts, dialect)
+    }
+
+    JDBCRepoBuilder(Connection connection, String locksTable = DEFAULT_TABLE,
                     Opts opts = new Opts(), Dialect dialect = new BasicDialect()) {
         this.connection = connection
         this.opts = opts

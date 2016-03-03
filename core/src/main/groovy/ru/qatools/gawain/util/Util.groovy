@@ -4,7 +4,7 @@ import groovy.json.JsonSlurper
 /**
  * @author Ilya Sadykov
  */
-class Util {
+abstract class Util {
     static final def JSON = new JsonSlurper()
 
     static <T> Optional<T> opt(T val) {
