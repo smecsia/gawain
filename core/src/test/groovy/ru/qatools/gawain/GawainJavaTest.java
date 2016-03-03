@@ -13,6 +13,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static ru.qatools.gawain.Opts.opts;
 
 /**
  * @author Ilya Sadykov
@@ -36,7 +37,8 @@ public class GawainJavaTest {
 
             r.doEvery(300, MILLISECONDS, () ->
                     r.repo("all").withEach((key, state) ->
-                            state.put("timer", (int) state.get("timer") + 1)));
+                            state.put("timer", (int) state.get("timer") + 1)), opts("global", true)
+            );
         });
 
         gawain.to("input", "event1");

@@ -26,7 +26,15 @@ class Opts {
         }
     }
 
+    Opts(List opts) {
+        setProps(opts)
+    }
+
     Opts(Map opts = [:]) {
+        setProps(opts)
+    }
+
+    Opts set(List opts) {
         setProps(opts)
     }
 
@@ -34,11 +42,30 @@ class Opts {
         setProps(opts); this
     }
 
+    public static final Opts opts(Object... opts) {
+        this.opts(opts as List)
+    }
+    public static final Opts opts(List opts) {
+        new Opts(opts)
+    }
+
     public static final Opts opts(Map opts) {
         new Opts(opts)
     }
 
-    protected Map setProps(Map opts) {
+    protected Opts setProps(List opts) {
+        if (opts.size() % 2 > 0) {
+            throw new IllegalAccessException("")
+        }
+        for (int idx = 0; idx < opts.size() - 1; idx += 2) {
+            def map = [:]
+            map.put(opts[idx], opts[idx + 1])
+            setProps(map)
+        }
+        this
+    }
+
+    protected Opts setProps(Map opts) {
         def self = this
         opts.each { k, v ->
             def key = k as String
@@ -48,5 +75,6 @@ class Opts {
                 self.opts[key] = v
             }
         }
+        this
     }
 }
