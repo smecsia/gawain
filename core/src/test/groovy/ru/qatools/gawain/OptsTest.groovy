@@ -29,6 +29,9 @@ class OptsTest {
 
         o = opts(['aaa', 50])
         assertThat(o['aaa'] as int, equalTo(50))
+
+        o = opts('aaa', 33)
+        assertThat(o['aaa'] as int, equalTo(33))
     }
 
     @Test(expected = IllegalAccessException)
