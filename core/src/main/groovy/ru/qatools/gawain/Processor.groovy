@@ -49,6 +49,8 @@ class Processor {
                             LOG.error("[{}][{}] failed to process event {}", router.name, name, event, e)
                         }
                     }
+                } else {
+                    LOG.debug("[{}][{}] event filtered: {}", router.name, name, event)
                 }
             } catch (e) {
                 LOG.error("[{}][{}] failed to filter/process event {}", router.name, name, event, e)

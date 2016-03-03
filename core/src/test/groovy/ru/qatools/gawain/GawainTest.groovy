@@ -48,6 +48,16 @@ class GawainTest {
     }
 
     @Test
+    public void testFilters() throws Exception {
+        def gawain = Gawain.run {
+            processor('filter', filter { it != 'Vasya' }, process { "${it}proc" }).to('users')
+            aggregator 'users', key { it }, aggregate { state, evt -> state.name = evt }
+        }
+        ['Petya','Vasya','Masha'].each { gawain.to('filter', it) }
+        await().atMost(2, SECONDS).until({ gawain.repo('users').keys() }, containsInAnyOrder('Petya', 'Masha'))
+    }
+
+    @Test
     public void testTimers() throws Exception {
         def gawain = Gawain.run {
             aggregator 'input', key { it.id },

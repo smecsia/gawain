@@ -7,6 +7,7 @@ import ru.qatools.gawain.builders.*
 import ru.qatools.gawain.error.UnknownProcessorException
 import ru.qatools.gawain.impl.AggregationKeyImpl
 import ru.qatools.gawain.impl.AggregationStrategyImpl
+import ru.qatools.gawain.impl.FilterImpl
 import ru.qatools.gawain.impl.ProcessingStrategyImpl
 import ru.qatools.gawain.java.GawainRun
 import ru.qatools.gawain.java.Router
@@ -203,7 +204,7 @@ class Gawain<E> implements Router<E> {
     }
 
     static Filter filter(Closure callback = {}) {
-        new Filter(callback: callback)
+        new FilterImpl(callback: callback)
     }
 
     static long now() {
