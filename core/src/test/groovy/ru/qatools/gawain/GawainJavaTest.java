@@ -71,21 +71,24 @@ public class GawainJavaTest {
     public void testChangeEventType() throws Exception {
         final List<User> users = new ArrayList<>();
         final Gawain gawain = Gawain.run(r -> {
-            r.processor("mr", process(evt -> new String[]{"Mr " + evt})).to("second");
-            r.processor("mrs", process(evt -> new String[]{"Mrs " + evt})).to("second");
-            r.processor("second", process(evt -> {
+            r.processor("male",
+                    filter(evt -> !"Johnson".equals(evt)),
+                    process(evt -> new String[]{"Mr. " + evt})).to("users");
+            r.processor("female", process(evt -> new String[]{"Mrs. " + evt})).to("users");
+            r.processor("users", process(evt -> {
                 return new User(((String[]) evt)[0]);
             })).to("output");
             r.processor("output", process(evt -> users.add((User) evt)));
         });
 
-        gawain.to("mr", "Petya");
-        gawain.to("mr", "Vasya");
-        gawain.to("mrs", "Malina");
+        gawain.to("male", "Johnson");
+        gawain.to("male", "Ivanov");
+        gawain.to("male", "Petrov");
+        gawain.to("female", "Malina");
 
         await().atMost(2, SECONDS).until(users::size, equalTo(3));
         assertThat(users, containsInAnyOrder(
-                asList("Mr Petya", "Mr Vasya", "Mrs Malina").stream()
+                asList("Mr. Ivanov", "Mr. Petrov", "Mrs. Malina").stream()
                         .map(User::new).collect(toList()).toArray()
         ));
     }

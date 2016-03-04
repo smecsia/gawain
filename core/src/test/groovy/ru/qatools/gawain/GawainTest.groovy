@@ -206,6 +206,44 @@ class GawainTest {
         gawain.to('input', 'Masha')
         await().atMost(2, SECONDS).until({ gawain.repo('all')['all'].events.size() }, equalTo(3))
         def state = gawain.repo('all')['all']
-        assertThat(state.events.collect {  it.object.name }, containsInAnyOrder('Vasya', 'Petya', 'Masha'))
+        assertThat(state.events.collect { it.object.name }, containsInAnyOrder('Vasya', 'Petya', 'Masha'))
+    }
+
+    @Test
+    public void testWithoutAggStrategy() throws Exception {
+        def gawain = Gawain.run {
+            processor('input').to('storage')
+            aggregator('storage', consumers: 10)
+        }
+        gawain.to('input', 'Vasya')
+        gawain.to('input', 'Petya')
+        gawain.to('input', 'Masha')
+        await().atMost(2, SECONDS).until({ gawain.repo('storage').keys() }, hasSize(3))
+        assertThat(gawain.repo('storage').keys(), containsInAnyOrder('Vasya', 'Petya', 'Masha'))
+    }
+
+    @Test
+    public void testRouterByType() throws Exception {
+        def gawain = Gawain.run {
+            processor 'router', { evt ->
+                switch (evt) {
+                    case String: to('strings', evt); break;
+                    case Integer: to('integers', evt); break;
+                    default: to('trash', evt); break;
+                }
+            }
+            aggregator 'strings'
+            aggregator 'integers'
+            aggregator 'trash'
+        }
+        gawain.to('router', 'String1')
+        gawain.to('router', 5)
+        gawain.to('router', true)
+        gawain.to('router', 'String2')
+        await().atMost(2, SECONDS).until({ gawain.repo('strings').keys() }, hasSize(2))
+        await().atMost(2, SECONDS).until({ gawain.repo('integers').keys() }, hasSize(1))
+        await().atMost(2, SECONDS).until({ gawain.repo('trash').keys() }, hasSize(1))
+        assertThat(gawain.repo('strings').keys(), containsInAnyOrder('String1', 'String2'))
+
     }
 }

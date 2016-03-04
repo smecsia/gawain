@@ -132,6 +132,14 @@ class Gawain<E> implements Router<E> {
         )
     }
 
+    Aggregator aggregator(String name, AggregationKey<E> key = { String.valueOf(it) }, Opts opts) {
+        aggregator(name, null, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), opts)
+    }
+
+    Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key = { String.valueOf(it) }) {
+        aggregator(name, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), new Opts(opts))
+    }
+
     Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts) {
         aggregator(name, null, key, strategy, opts)
     }
@@ -158,6 +166,10 @@ class Gawain<E> implements Router<E> {
 
     Processor processor(Map opts = [:], String name, ProcessingStrategy<E> strategy) {
         processor(name, strategy, new Opts(opts))
+    }
+
+    Processor processor(Map opts = [:], String name) {
+        processor(name, { it } as ProcessingStrategy<E>, new Opts(opts))
     }
 
     // Protected

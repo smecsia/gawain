@@ -2,6 +2,11 @@
 
 Microframework focusing on data processing and aggregation in distributed environment
 
+## Features
+
+* Distributed processing and aggregation with many threads
+* Consistent aggregations 
+
 ## Setup
 build.gradle
 ```groovy
@@ -10,7 +15,7 @@ build.gradle
 
 ## Usage
 
-Gawain is an event-driven framework which operates with terms like `queue`, `event`, `state`, `processor`, `aggregator`, `repository`, `broadcaster`, `timer`. 
+Gawain is an event-driven framework which operates with the terms like `queue`, `event`, `state`, `processor`, `aggregator`, `repository`, `broadcaster`, `timer`. 
 * `event` is a message that can affect system. It is enqueued into the `queue` and later is processed by `processor` or `aggregator`.
 * `queue` is a storage, where messages reside until they are processed by `processor` or `aggregator`.
 * Unlike the `queue`, `broadcaster` is a message broker that routes messages to every node of the cluster.
@@ -19,6 +24,8 @@ Gawain is an event-driven framework which operates with terms like `queue`, `eve
 of [correlation identifiers](http://camel.apache.org/correlation-identifier.html) and values. Aggregation can happen 
 on any node of the cluster and thus must be performed concurrently. Gawain uses the 
 [distributed locks](http://en.wikipedia.org/wiki/Distributed_lock_manager) for that purpose.
+* `state` represents the single value identified by aggregation key and can contain any accumulated data. 
+* `repository` is a storage for states. It can be in-memory or can represent the distributed map of values.
 * `timer` is a scheduled job, which can perform any operations periodically with given schedule.
 
 ```groovy
@@ -41,6 +48,47 @@ println(gawain.repo('people').keys())
 
 ### Routing
 
+Route can represent a graph, in which each vertex is a single processor or aggregator. It can be cyclic or acyclic.
+Typical route looks like a sequence of processors which ends with aggregator: 
+```
+proc1 -> proc2 -> ... -> procN -> aggregator
+```
+This allows to transform the source event and then accumulate the transformed events within repository.
+
+```groovy
+processor('proc1', { it * 2 }).to('proc2')
+processor('proc2', { it - 1 }).to('proc3')
+processor('proc3', { it / 2 }).to('aggregator')
+aggregator('aggregator')
+```
+
+The code above allows to perform some calculations on values and then store them within repository. 
+For example if we send value `2` to `proc1` then repository for `aggregator` will contain value `1.5`.
+
+Route can be conditional or unconditional. To specify a condition, you can use `to` or `broadcast` 
+methods directly from processor being based on message value:
+
+```groovy
+processor 'router', { evt -> 
+    switch (evt) {
+        case String: to('strings', evt); break;
+        case Integer: to('integers', evt); break;
+        default: to('trash', evt); break;
+    }
+}
+```
+
+* If event is sent from one processor to another via `to` method, then the next processing will occur on a single node of 
+the cluster. If you configure the distributed message broker (e.g. ActiveMQ), the target node may be any of the cluster nodes, 
+otherwise all queues will be in-memory (and thus processing will occur on the same node as the previous one).
+* If event is sent from one processor to another via `broadcast` method, and there is a configured distributed broadcasting 
+broker (e.g. ActiveMQ or MongoDB), then all the nodes of the cluster will receive such message. And it will be processed by the 
+next processor on every cluster node (one time for each node).
+
+```groovy
+processor('launcher').broadcast('proc')
+processor 'proc', { println('Launching proc on every cluster node') }
+```
 
 ### Scheduled processors
 
@@ -80,6 +128,54 @@ node only) you should pass 'global' option in definition:
 ```groovy
 doEvery(100, MILLISECONDS, { println("Hello from master node!" }, global: true)
 ```
+
+### Use from java code
+
+Gawain easily integrates with java code. The main difference is due to the difference in Java lambda and Groovy closure. 
+In Java you have to use the router reference within lambdas:
+
+```java
+final List<User> users = new ArrayList();
+
+final Gawain gawain = Gawain.run(r -> {
+    r.processor("male",
+            filter(evt -> !"Johnson".equals(evt)),
+            process(evt -> "Mr. " + evt)).to("users");
+    r.processor("female", process(evt -> "Mrs. " + evt)).to("users");
+    r.processor("users", process(User::new)).to("output");
+    r.processor("output", process(evt -> users.add((User) evt)));
+});
+
+gawain.to("female", "Ivanova");
+gawain.to("male", "Johnson");
+gawain.to("male", "Petrov");
+// ...
+// after processing is finished users will contain ["Mrs. Ivanova", "Mr. Petrov"]
+
+```
+
+### Processors & Aggregators options
+
+You can specify a number of options for processors and aggregators:
+* `consumers` - Limits the queue consumers count. Specifies the number of concurrently performing consumers. 
+Default value: 1.
+* `bcConsumers` - Limits the number of concurrently performing consumers for broadcasted messages. 
+Default value: 1.
+* `processors` - Processing thread pool size. Sets the maximum processing threads for incoming messages.
+This option specifies the number of concurrently processing messages per consumer. 
+Default value: 10.
+* `maxLockWaitMs` - Specifies maximum time in which the lock must be obtained. This option allows to prevent the 
+deadlocks when one of the consumers is locked for a long time.
+Default value: 30000.
+* `lockPollIntervalMs` - Allows to configure the interval of polling the database to acquire the lock. Lower values 
+lead to the higher loads of the database. Higher values may lead to the slower aggregation. 
+Default value: 10
+* `maxQueueSize` - Sets the maximum queue size. With very intensive messages stream consumers
+sometimes cannot handle all of them. This option allows to limit the maximum messages within queue. 
+Newer messages will be dropped if queue is full. This option may lead to inconsistency. It is disabled
+by default.
+
+
 
 ### ActiveMQ as a message broker and broadcaster
 

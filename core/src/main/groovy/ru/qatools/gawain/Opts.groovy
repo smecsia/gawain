@@ -11,7 +11,7 @@ class Opts {
         processors = 10,            // max count of processor threads
         consumers = 1,              // max count of queue consumer threads
         bcConsumers = 1,            // max count of broadcaster queue consumer threads
-        maxLockWaitMs = 1000        // max time to wait until lock is available
+        maxLockWaitMs = 30000       // max time to wait until lock is available
     long maxQueueWaitSec = 0,       // max time to wait until queue provides a message
          lockPollIntervalMs = 10    // interval to poll locks from db
     boolean global = false          // indicates global or local job
