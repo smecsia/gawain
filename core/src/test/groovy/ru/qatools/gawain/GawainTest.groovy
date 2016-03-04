@@ -27,7 +27,7 @@ class GawainTest {
     @Test
     public void testSimpleRoute() throws Exception {
         def gawain = Gawain.run {
-            processor('input', { evt -> evt.processed = true }).to('all')
+            processor('input', { evt -> evt.processed = true; evt }).to('all')
 
             aggregator 'all', key { 'all' },
                     aggregate { state, evt ->
@@ -54,7 +54,7 @@ class GawainTest {
             aggregator 'users', key { it }, aggregate { state, evt -> state.name = evt }
         }
         ['Petya', 'Vasya', 'Masha'].each { gawain.to('filter', it) }
-        await().atMost(2, SECONDS).until({ gawain.repo('users').keys() }, containsInAnyOrder('Petya', 'Masha'))
+        await().atMost(2, SECONDS).until({ gawain.repo('users').keys() }, containsInAnyOrder('Petyaproc', 'Mashaproc'))
     }
 
     @Test
@@ -141,7 +141,7 @@ class GawainTest {
     public void testCustomObjectAsEvent() throws Exception {
         def gawain = Gawain.run {
             processor('input', process { User user ->
-                println("Hello, ${user.name}, ${user.email}")
+                println("Hello, ${user.name}, ${user.email}"); user
             }).to('users')
 
             aggregator 'users', key { "${it.name}" }, aggregate { state, evt ->
@@ -206,6 +206,6 @@ class GawainTest {
         gawain.to('input', 'Masha')
         await().atMost(2, SECONDS).until({ gawain.repo('all')['all'].events.size() }, equalTo(3))
         def state = gawain.repo('all')['all']
-        assertThat(state.events, containsInAnyOrder('Vasya', 'Petya', 'Masha'))
+        assertThat(state.events.collect {  it.object.name }, containsInAnyOrder('Vasya', 'Petya', 'Masha'))
     }
 }
