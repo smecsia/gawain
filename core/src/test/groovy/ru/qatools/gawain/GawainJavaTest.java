@@ -2,10 +2,7 @@ package ru.qatools.gawain;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.lang.Thread.sleep;
@@ -13,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.rangeClosed;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static ru.qatools.gawain.Gawain.*;
@@ -40,7 +38,6 @@ public class GawainJavaTest {
                             state.put("timer", 0);
                         }
                         ((List) state.get("events")).add(evt);
-                        return state;
                     }
             );
 
@@ -91,6 +88,23 @@ public class GawainJavaTest {
                 asList("Mr. Ivanov", "Mr. Petrov", "Mrs. Malina").stream()
                         .map(User::new).collect(toList()).toArray()
         ));
+    }
+
+
+    @Test
+    public void testDoAggregation() throws Exception {
+        List<Integer> events = rangeClosed(1, 100000)
+                .map(i -> new Random().nextInt(100))
+                .boxed().collect(toList());
+        Map<String, Map> res = Gawain.doAggregation(events,
+                key(String::valueOf),
+                aggregate((AggregationStrategy<Integer>) (state, event) ->
+                        state.put("count", state.get("count") != null ? (int) state.get("count") + 1 : 1)),
+                opts("consumers", 100, "processors", 1, "benchmark", true));
+        res.entrySet().forEach(e ->
+                System.out.println(e.getKey() + ": " + e.getValue().get("count"))
+        );
+
     }
 
     public static class User {

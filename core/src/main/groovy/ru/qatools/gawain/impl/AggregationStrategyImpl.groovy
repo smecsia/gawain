@@ -10,8 +10,7 @@ import ru.qatools.gawain.AggregationStrategy
 class AggregationStrategyImpl<T> extends ProcessingStrategyImpl<T> implements AggregationStrategy<T> {
 
     @Override
-    Map process(Map state, event) {
+    void process(Map state, event) {
         callback.call(state, event)
-        state
     }
 }

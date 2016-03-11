@@ -8,5 +8,5 @@ import groovy.transform.CompileStatic
 @CompileStatic
 interface AggregationStrategy<T> {
 
-    Map process(Map state, T event)
+    void process(Map state, T event)
 }

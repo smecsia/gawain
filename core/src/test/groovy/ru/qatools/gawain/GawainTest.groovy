@@ -84,6 +84,18 @@ class GawainTest {
     }
 
     @Test
+    public void testCustomScheduler() throws Exception {
+        def scheduler = mock(Scheduler.class)
+        Gawain.run {
+            useScheduler(scheduler)
+            doEvery 300, MILLISECONDS, {}
+            doEvery 100, SECONDS, {}
+        }
+        verify(scheduler).addJob(eq(300), eq(MILLISECONDS), any(Closure), any(Opts))
+        verify(scheduler).addJob(eq(100), eq(SECONDS), any(Closure), any(Opts))
+    }
+
+    @Test
     public void testCustomRepoBuilder() throws Exception {
         def repo = mock(Repository.class)
         def gawain = Gawain.run {
@@ -246,4 +258,5 @@ class GawainTest {
         assertThat(gawain.repo('strings').keys(), containsInAnyOrder('String1', 'String2'))
 
     }
+
 }

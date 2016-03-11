@@ -5,18 +5,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.qatools.gawain.builders.*
 import ru.qatools.gawain.error.UnknownProcessorException
-import ru.qatools.gawain.impl.AggregationKeyImpl
-import ru.qatools.gawain.impl.AggregationStrategyImpl
-import ru.qatools.gawain.impl.FilterImpl
-import ru.qatools.gawain.impl.ProcessingStrategyImpl
+import ru.qatools.gawain.impl.*
 import ru.qatools.gawain.java.GawainRun
 import ru.qatools.gawain.java.Router
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
 import static java.lang.System.currentTimeMillis
-import static java.util.concurrent.Executors.newFixedThreadPool
 import static ru.qatools.gawain.util.Util.opt
 
 /**
@@ -27,31 +24,55 @@ class Gawain<E> implements Router<E> {
     static final Logger LOGGER = LoggerFactory.getLogger(Gawain.class)
     static final Opts DEFAULT_OPTS = new Opts()
     public static final String DEFAULT_NAME = "router"
-    String name
+    final String name
+    private volatile boolean started
     private Map<String, Processor> processors = [:]
+    private Map<String, List<ExecutorService>> threadpools = [:]
     private Map<String, Opts> opts = [:]
     private Map<String, Broadcaster> broadcasters = [:]
-    private Repository timersRepo
     private QueueBuilder queueBuilder = new BasicQueueBuilder()
     private RepoBuilder repoBuilder = new BasicRepoBuilder()
     private BroadcastBuilder bcBuilder = new BasicBroadcastBuilder()
     private ThreadPoolBuilder threadPoolBuilder = new BasicThreadPoolBuilder()
     private Scheduler scheduler
 
-    private Gawain() {
-
+    private Gawain(String name) {
+        this.name = name
     }
 
-    private init() {
-        scheduler?.start()
-        processors.values().each { p ->
-            Integer tCount = opts(p.name).consumers
-            LOGGER.info("[${name}][${p.name}] Starting ${tCount} consumers...")
-            def tp = newFixedThreadPool(tCount)
-            tCount.times { idx ->
-                LOGGER.info("[${name}][${p.name}#${idx}] Starting consumer...")
-                tp.submit { p.run("${idx}") }
+    /**
+     * Begin the main loop for consumers according to their configuration
+     */
+    @Override
+    public synchronized void start() {
+        if (!started) {
+            LOGGER.info("[${name}] Starting router")
+            scheduler?.start()
+            processors.values().each { p ->
+                Integer tCount = opts(p.name).consumers
+                LOGGER.info("[${name}][${p.name}] Starting ${tCount} consumers...")
+                ExecutorService tp = threadPoolBuilder.build(tCount)
+                tCount.times { idx ->
+                    LOGGER.info("[${name}][${p.name}#${idx}] Starting consumer...")
+                    tp.submit { p.run("${idx}") }
+                }
+                threadpools[p.name] = (threadpools[p.name] ?: []) as List<ExecutorService>
+                threadpools[p.name] << tp
             }
+            started = true
+        }
+    }
+
+    /**
+     * Terminates the execution of all actively running processings
+     */
+    @Override
+    public synchronized void stop() {
+        if (started) {
+            LOGGER.info("[${name}] Stopping router")
+            scheduler?.terminate()
+            threadpools.each { k, tps -> tps.each { it.shutdownNow() } }
+            started = false
         }
     }
 
@@ -100,7 +121,7 @@ class Gawain<E> implements Router<E> {
     }
 
     def doEvery(int frequency, TimeUnit unit, Closure task, Opts opts) {
-        scheduler = scheduler ?: new Scheduler(name, repoBuilder.build('__scheduler__', opts))
+        scheduler = scheduler ?: new SchedulerImpl(name, repoBuilder.build('__scheduler__', opts))
         scheduler.addJob(frequency, unit, task, opts)
     }
 
@@ -192,15 +213,44 @@ class Gawain<E> implements Router<E> {
 
     // Static DSL
 
-    static <E> Gawain<E> run(String name, Closure strategy = {}) {
-        def instance = new Gawain(name: name)
+    static <E> Gawain<E> run(String name, Closure strategy = {}, boolean startConsumers = true) {
+        def instance = new Gawain(name)
         instance.with(strategy)
-        instance.init()
+        if (startConsumers) {
+            instance.start()
+        }
         instance
     }
 
     static <E> Gawain<E> run(Closure strategy = {}) {
         run(DEFAULT_NAME, strategy)
+    }
+
+    /**
+     * Perform the aggregation of events according to the key & strategy
+     * This method blocks until aggregation is finished for all events and then returns results
+     */
+    static <E> Map<String, Map> doAggregation(Collection events, AggregationKey<E> key,
+                                              AggregationStrategy<E> strategy,
+                                              Opts opts = DEFAULT_OPTS, GawainRun customize = {}) {
+        def latch = new CountDownLatch(events.size())
+        def router = run(DEFAULT_NAME, {
+            def r = (it as Gawain<E>)
+            customize.run(r)
+            r.aggregator('input', key, strategy, opts).to('out')
+            r.processor 'out', { latch.countDown() }
+        }, opts['benchmark'] == null)
+        events.each { router.to('input', it) }
+        final long startedTime = currentTimeMillis()
+        if (opts['benchmark']) {
+            router.start()
+        }
+        latch.await()
+        if (opts['benchmark']) {
+            LOGGER.info("Aggregation has been finished in {}ms", currentTimeMillis() - startedTime)
+        }
+        router.stop()
+        router.repo('input').values()
     }
 
     static <E> Gawain<E> run(GawainRun strategy) {
