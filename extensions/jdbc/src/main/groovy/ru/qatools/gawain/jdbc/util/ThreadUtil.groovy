@@ -1,9 +1,13 @@
 package ru.qatools.gawain.jdbc.util
+
+import groovy.transform.CompileStatic
+
 import static java.lang.Thread.currentThread
 import static java.lang.management.ManagementFactory.getRuntimeMXBean
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 class ThreadUtil {
     private static final ThreadLocal<Long> THREAD_LOCAL = new ThreadLocal<Long>();
 

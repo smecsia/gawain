@@ -1,10 +1,12 @@
 package ru.qatools.gawain
 
+import groovy.transform.CompileStatic
 import ru.qatools.gawain.impl.FSTSerializer
 
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 class Opts {
     private final Map<String, Object> opts = [:]
     int maxQueueSize = 0,           // max size for the queue
@@ -75,9 +77,9 @@ class Opts {
         opts.each { k, v ->
             def key = k as String
             if (self.metaClass.properties.any { it.name == key }) {
-                self."${key}" = v
+                self.metaClass.setProperty(self, key, v)
             } else {
-                self.opts[key] = v
+                self.opts.put(key, v)
             }
         }
         this

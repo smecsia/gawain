@@ -1,9 +1,12 @@
 package ru.qatools.gawain.mongodb
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
+import groovy.transform.CompileStatic
+
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 abstract class AbstractMongoBuilder {
     final String dbName
     final MongoClient mongoClient

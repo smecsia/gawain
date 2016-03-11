@@ -1,11 +1,14 @@
 package ru.qatools.gawain.util
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
+
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 abstract class Util {
-    static final def JSON = new JsonSlurper()
+    static final JsonSlurper JSON = new JsonSlurper()
 
     static <T> Optional<T> opt(T val) {
         (val != null) ? Optional.of(val) : Optional.empty()

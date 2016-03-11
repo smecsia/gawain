@@ -1,8 +1,11 @@
 package ru.qatools.gawain.util;
 
+import groovy.transform.CompileStatic;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 
+@CompileStatic
 public abstract class SocketUtil {
     /**
      * Returns a free port number on localhost.

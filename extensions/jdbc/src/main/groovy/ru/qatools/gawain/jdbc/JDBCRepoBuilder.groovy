@@ -1,5 +1,6 @@
 package ru.qatools.gawain.jdbc
 
+import groovy.transform.CompileStatic
 import ru.qatools.gawain.Opts
 import ru.qatools.gawain.Repository
 import ru.qatools.gawain.builders.RepoBuilder
@@ -11,6 +12,7 @@ import java.sql.Connection
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 class JDBCRepoBuilder implements RepoBuilder {
     public static final String DEFAULT_TABLE = '__locks__'
     final Connection connection

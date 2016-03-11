@@ -1,5 +1,6 @@
 package ru.qatools.gawain.activemq
 
+import groovy.transform.CompileStatic
 import org.apache.activemq.ActiveMQConnection
 
 import javax.jms.Session
@@ -7,6 +8,7 @@ import javax.jms.Session
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 abstract class AbstractActivemqBuilder {
     final ActiveMQConnection connection
     final Session session
