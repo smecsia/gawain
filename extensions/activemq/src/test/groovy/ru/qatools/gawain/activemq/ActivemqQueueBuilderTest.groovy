@@ -1,5 +1,4 @@
 package ru.qatools.gawain.activemq
-
 import org.junit.Test
 import ru.qatools.gawain.Gawain
 
@@ -8,7 +7,8 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static org.hamcrest.Matchers.containsInAnyOrder
 import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
-
+import static ru.qatools.gawain.Gawain.*
+import static ru.qatools.gawain.Opts.opts
 /**
  * @author Ilya Sadykov
  */
@@ -29,6 +29,17 @@ class ActivemqQueueBuilderTest extends AbstractActivemqTest {
         await().atMost(5, SECONDS).until({ gawain.repo('users')['all']?.users?.size() }, equalTo(3))
         assertThat(gawain.repo('users')['all']
                 .users.collect({ it.name }), containsInAnyOrder('Vasya', 'Petya', 'Sergey'))
+    }
 
+    @Test
+    public void testSingleRunWithResult() throws Exception {
+        Collection<Integer> events = (0..1000).collect { new Random().nextInt(100) }
+        def results = doAggregation(
+                events, key { it },
+                aggregate { s, e -> s.count = (s.count ?: 0) + 1 },
+                opts(consumers: 100, processors: 1, maxQueueSize: 1000000, benchmark: true),
+                { it.useQueueBuilder(activemqQueueBuilder()) }
+        )
+        println(results)
     }
 }

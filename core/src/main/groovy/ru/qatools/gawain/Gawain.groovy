@@ -232,11 +232,11 @@ class Gawain<E> implements Router<E> {
      */
     static <E> Map<String, Map> doAggregation(Collection events, AggregationKey<E> key,
                                               AggregationStrategy<E> strategy,
-                                              Opts opts = DEFAULT_OPTS, GawainRun customize = {}) {
+                                              Opts opts = DEFAULT_OPTS, Closure customize = {}) {
         def latch = new CountDownLatch(events.size())
         def router = run(DEFAULT_NAME, {
             def r = (it as Gawain<E>)
-            customize.run(r)
+            it.with(customize)
             r.aggregator('input', key, strategy, opts).to('out')
             r.processor 'out', { latch.countDown() }
         }, opts['benchmark'] == null)
@@ -251,6 +251,13 @@ class Gawain<E> implements Router<E> {
         }
         router.stop()
         router.repo('input').values()
+    }
+
+    // for Java
+    static <E> Map<String, Map> doAggregation(Collection events, AggregationKey<E> key,
+                                              AggregationStrategy<E> strategy,
+                                              Opts opts = DEFAULT_OPTS, GawainRun customize) {
+        doAggregation(events, key, strategy, opts, { customize.run(it as Gawain<E>) })
     }
 
     static <E> Gawain<E> run(GawainRun strategy) {
