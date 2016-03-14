@@ -16,6 +16,6 @@ class ActivemqBroadcastBuilder extends AbstractActivemqBuilder implements Broadc
 
     @Override
     Broadcaster build(String consumer, Gawain router, Opts opts) {
-        new ActivemqBroadcaster(consumer, session, router, opts)
+        new ActivemqBroadcaster(consumer, connectionFactory, router, opts)
     }
 }

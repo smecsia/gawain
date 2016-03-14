@@ -1,17 +1,19 @@
 package ru.qatools.gawain.activemq
 import groovy.transform.CompileStatic
+import org.apache.activemq.ActiveMQConnectionFactory
 import ru.qatools.gawain.GawainQueue
 import ru.qatools.gawain.Opts
 
+import javax.jms.Destination
 import javax.jms.Session
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
-class ActivemqQueue<T extends Serializable> extends AbstractActivemqRouter<T> implements GawainQueue<T> {
+class ActivemqQueue<T extends Serializable> extends AbstractActivemqConsumer<T> implements GawainQueue<T> {
 
-    ActivemqQueue(String destName, Session session, Opts opts = new Opts()) {
-        super(destName, session, session.createQueue(destName), opts)
+    ActivemqQueue(String destName, ActiveMQConnectionFactory factory, Opts opts = new Opts()) {
+        super(destName, factory, opts)
     }
 
     @Override
@@ -20,7 +22,12 @@ class ActivemqQueue<T extends Serializable> extends AbstractActivemqRouter<T> im
     }
 
     @Override
-    T take() {
-        consume()
+    ActivemqConsumer<T> buildConsumer() {
+        super.newConsumer()
+    }
+
+    @Override
+    protected Destination initDestination(Session session, String name) {
+        session.createQueue(name)
     }
 }

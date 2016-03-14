@@ -11,21 +11,35 @@ import java.util.concurrent.BlockingQueue
  */
 @Canonical
 @CompileStatic
-class GawainBlockingQueue implements GawainQueue {
+class GawainBlockingQueue<T> implements GawainQueue<T> {
     public static final int DEFAULT_MAX_SIZE = 100000
-    final BlockingQueue queue
+    protected final BlockingQueue queue
 
     GawainBlockingQueue(int maxSize) {
         queue = new ArrayBlockingQueue((maxSize ?: DEFAULT_MAX_SIZE) as int)
     }
 
     @Override
-    def add(event) {
+    def add(T event) {
         queue.add(event)
     }
 
     @Override
-    Object take() {
-        queue.take()
+    Consumer<T> buildConsumer() {
+        new Consumer(queue)
+    }
+
+    @CompileStatic
+    static class Consumer<T> implements GawainQueueConsumer<T> {
+        final BlockingQueue queue
+
+        Consumer(BlockingQueue queue) {
+            this.queue = queue
+        }
+
+        @Override
+        T consume() {
+            queue.take()
+        }
     }
 }

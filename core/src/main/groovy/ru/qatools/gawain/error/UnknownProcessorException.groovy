@@ -8,6 +8,6 @@ import groovy.transform.InheritConstructors
  */
 @CompileStatic
 @InheritConstructors
-class UnknownProcessorException extends RuntimeException {
+class UnknownProcessorException extends GawainRuntimeException {
 
 }

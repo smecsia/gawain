@@ -1,23 +1,14 @@
 package ru.qatools.gawain.activemq
-
 import groovy.transform.CompileStatic
-import org.apache.activemq.ActiveMQConnection
-
-import javax.jms.Session
-
+import org.apache.activemq.ActiveMQConnectionFactory
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
 abstract class AbstractActivemqBuilder {
-    final ActiveMQConnection connection
-    final Session session
+    final ActiveMQConnectionFactory connectionFactory
 
-    AbstractActivemqBuilder(ActiveMQConnection connection) {
-        this.connection = connection
-        if (!connection.isStarted()) {
-            connection.start()
-        }
-        this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+    AbstractActivemqBuilder(ActiveMQConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
     }
 }

@@ -8,16 +8,16 @@ import ru.qatools.gawain.Serializer
  * @author Ilya Sadykov
  */
 @CompileStatic
-class FSTSerializer implements Serializer<Map> {
+class FSTSerializer<T> implements Serializer<T> {
     static final FSTConfiguration serializer = FSTConfiguration.createDefaultConfiguration()
 
     @Override
-    byte[] toBytes(Map object) {
+    byte[] toBytes(T object) {
         (object != null) ? serializer.asByteArray(object) : null
     }
 
     @Override
-    Map fromBytes(byte[] bytes) {
-        serializer.asObject(bytes) as Map
+    T fromBytes(byte[] bytes) {
+        serializer.asObject(bytes) as T
     }
 }

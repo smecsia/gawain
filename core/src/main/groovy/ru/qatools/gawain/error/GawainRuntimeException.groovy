@@ -6,8 +6,7 @@ import groovy.transform.InheritConstructors
 /**
  * @author Ilya Sadykov
  */
+@InheritConstructors
 @CompileStatic
-@InheritConstructors
-@InheritConstructors
-class InvalidLockOwnerException extends GawainRuntimeException {
+class GawainRuntimeException extends RuntimeException{
 }

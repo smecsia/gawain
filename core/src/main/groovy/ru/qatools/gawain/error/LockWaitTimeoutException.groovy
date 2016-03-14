@@ -8,5 +8,5 @@ import groovy.transform.InheritConstructors
  */
 @CompileStatic
 @InheritConstructors
-class LockWaitTimeoutException extends RuntimeException {
+class LockWaitTimeoutException extends GawainRuntimeException {
 }

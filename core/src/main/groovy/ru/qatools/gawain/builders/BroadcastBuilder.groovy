@@ -9,8 +9,8 @@ import ru.qatools.gawain.Opts
  * @author Ilya Sadykov
  */
 @CompileStatic
-trait BroadcastBuilder {
+interface BroadcastBuilder {
 
-    abstract Broadcaster build(String name, Gawain gawain, Opts opts);
+    Broadcaster build(String name, Gawain gawain, Opts opts)
 
 }

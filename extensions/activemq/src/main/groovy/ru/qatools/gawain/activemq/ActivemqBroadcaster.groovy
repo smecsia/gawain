@@ -1,10 +1,13 @@
 package ru.qatools.gawain.activemq
 
 import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
+import org.apache.activemq.ActiveMQConnectionFactory
 import ru.qatools.gawain.Broadcaster
 import ru.qatools.gawain.Gawain
 import ru.qatools.gawain.Opts
 
+import javax.jms.Destination
 import javax.jms.Session
 
 import static java.util.concurrent.Executors.newFixedThreadPool
@@ -13,19 +16,22 @@ import static java.util.concurrent.Executors.newFixedThreadPool
  * @author Ilya Sadykov
  */
 @CompileStatic
-class ActivemqBroadcaster<T extends Serializable> extends AbstractActivemqRouter<T> implements Broadcaster<T> {
+@InheritConstructors
+class ActivemqBroadcaster<T extends Serializable> extends AbstractActivemqConsumer<T> implements Broadcaster<T> {
+    final Gawain<T> router
 
-    @SuppressWarnings("GroovyInfiniteLoopStatement")
-    ActivemqBroadcaster(String destName, Session session, Gawain router, Opts opts = new Opts()) {
-        super(destName, session, session.createTopic(destName), opts)
+    ActivemqBroadcaster(String destName, ActiveMQConnectionFactory factory, Gawain router, Opts opts = new Opts()) {
+        super(destName, factory, opts)
+        this.router = router
         LOGGER.debug("[${router.name}][${destName}] Starting ${opts.bcConsumers} broadcaster consumers...")
         def tp = newFixedThreadPool(opts.bcConsumers)
         (opts.bcConsumers as Integer).times { idx ->
             LOGGER.debug("[${router.name}][${destName}#${idx}] Starting broadcaster consumer...")
+            ActivemqConsumer<T> consumer = newConsumer()
             tp.submit({
                 while (true) {
                     try {
-                        def msg = consume()
+                        final T msg = consumer.consume()
                         LOGGER.debug("[${router.name}][${destName}#${idx}] got event ${msg}")
                         router.to(destName, msg)
                     } catch (Exception e) {
@@ -40,5 +46,10 @@ class ActivemqBroadcaster<T extends Serializable> extends AbstractActivemqRouter
     @Override
     def broadcast(T event) {
         produce(event)
+    }
+
+    @Override
+    protected Destination initDestination(Session session, String name) {
+        session.createTopic(name)
     }
 }

@@ -1,14 +1,11 @@
 package ru.qatools.gawain.activemq
-
 import groovy.transform.CompileStatic
-import org.apache.activemq.ActiveMQConnection
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.junit.BeforeClass
 import ru.qatools.gawain.activemq.util.ActivemqEmbeddedService
 
 import static java.lang.Runtime.getRuntime
 import static ru.qatools.gawain.util.SocketUtil.findFreePort
-
 /**
  * @author Ilya Sadykov
  */
@@ -30,14 +27,10 @@ abstract class AbstractActivemqTest {
     }
 
     protected static ActivemqQueueBuilder activemqQueueBuilder() {
-        new ActivemqQueueBuilder(
-                factory.createConnection() as ActiveMQConnection
-        )
+        new ActivemqQueueBuilder(factory)
     }
 
     protected static ActivemqBroadcastBuilder activemqBroadcastBuilder() {
-        new ActivemqBroadcastBuilder(
-                factory.createConnection() as ActiveMQConnection
-        )
+        new ActivemqBroadcastBuilder(factory)
     }
 }

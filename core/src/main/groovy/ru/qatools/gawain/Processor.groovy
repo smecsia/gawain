@@ -16,7 +16,6 @@ class Processor {
     Gawain router
     String name
     List<Closure<Object>> outputs = []
-    GawainQueue queue
     ExecutorService executor
     Filter filter
     volatile boolean stopped = false
@@ -31,13 +30,9 @@ class Processor {
         stopped = true
     }
 
-    protected add(event) {
-        queue.add(event)
-    }
-
-    protected run(String idx = "0") {
+    protected run(GawainQueueConsumer consumer, String idx = "0") {
         while (!stopped) {
-            def event = queue.take()
+            def event = consumer.consume()
             LOG.debug("[{}][{}#{}] processing event {}", router.name, name, idx, event)
             try {
                 if (!filter || filter.filter(event)) {

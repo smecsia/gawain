@@ -35,8 +35,10 @@ class ActivemqQueueBuilderTest extends AbstractActivemqTest {
     public void testSingleRunWithResult() throws Exception {
         Collection<Integer> events = (0..1000).collect { new Random().nextInt(100) }
         def results = doAggregation(
-                events, key { it },
-                aggregate { s, e -> s.count = (s.count ?: 0) + 1 },
+                events, key { "${it}" },
+                aggregate { s, e ->
+                    s.count = (s.count ?: 0) + 1
+                },
                 opts(consumers: 100, processors: 1, maxQueueSize: 1000000, benchmark: true),
                 { it.useQueueBuilder(activemqQueueBuilder()) }
         )

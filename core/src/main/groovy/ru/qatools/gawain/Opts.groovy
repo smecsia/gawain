@@ -17,7 +17,7 @@ class Opts {
     long maxQueueWaitSec = 0,       // max time to wait until queue provides a message
          lockPollIntervalMs = 10    // interval to poll locks from db
     boolean global = false          // indicates global or local job
-    Serializer<Map> serializer = new FSTSerializer()
+    Serializer serializer = new FSTSerializer()
 
     // Constants just for convinience
     public static final String GLOBAL = 'global'

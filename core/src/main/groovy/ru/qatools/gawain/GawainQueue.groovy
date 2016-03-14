@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 interface GawainQueue<T> {
 
-    def add(T event);
+    def add(T event)
 
-    T take();
+    GawainQueueConsumer<T> buildConsumer()
 }

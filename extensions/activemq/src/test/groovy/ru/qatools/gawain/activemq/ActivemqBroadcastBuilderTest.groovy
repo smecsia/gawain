@@ -15,11 +15,11 @@ class ActivemqBroadcastBuilderTest extends AbstractActivemqTest {
 
     @Test
     public void testActivemqBroadcaster() throws Exception {
-        def gawain1 = Gawain.run("first") {
+        def gawain1 = Gawain.run('first') {
             useBroadcastBuilder(activemqBroadcastBuilder())
             processor('input', { it }).broadcast('users')
         }
-        def gawain2 = Gawain.run("second") {
+        def gawain2 = Gawain.run('second') {
             useBroadcastBuilder(activemqBroadcastBuilder())
             aggregator 'users', key { 'all' }, aggregate { state, evt ->
                 state.users = (state.users ?: []) + [evt]

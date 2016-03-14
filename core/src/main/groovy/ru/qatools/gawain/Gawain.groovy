@@ -28,6 +28,7 @@ class Gawain<E> implements Router<E> {
     private volatile boolean started
     private Map<String, Processor> processors = [:]
     private Map<String, List<ExecutorService>> threadpools = [:]
+    private Map<String, GawainQueue<E>> queues = [:]
     private Map<String, Opts> opts = [:]
     private Map<String, Broadcaster> broadcasters = [:]
     private QueueBuilder queueBuilder = new BasicQueueBuilder()
@@ -54,7 +55,9 @@ class Gawain<E> implements Router<E> {
                 ExecutorService tp = threadPoolBuilder.build(tCount)
                 tCount.times { idx ->
                     LOGGER.info("[${name}][${p.name}#${idx}] Starting consumer...")
-                    tp.submit { p.run("${idx}") }
+                    tp.submit {
+                        p.run(queues[p.name].buildConsumer(), "${idx}")
+                    }
                 }
                 threadpools[p.name] = (threadpools[p.name] ?: []) as List<ExecutorService>
                 threadpools[p.name] << tp
@@ -78,118 +81,119 @@ class Gawain<E> implements Router<E> {
 
     // DSL
 
-    def to(String name, E event) {
-        opt(processors[name]).orElseThrow({
+    public to(String name, E event) {
+        opt(queues[name]).orElseThrow({
             new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
         }).add(event)
     }
 
-    def broadcast(String name, E event) {
+    public broadcast(String name, E event) {
         getOrCreateBroadcaster(name).broadcast(event)
     }
 
-    def useBroadcastBuilder(BroadcastBuilder builder) {
+    public useBroadcastBuilder(BroadcastBuilder builder) {
         this.bcBuilder = builder
     }
 
-    def useQueueBuilder(QueueBuilder builder) {
+    public useQueueBuilder(QueueBuilder builder) {
         this.queueBuilder = builder
     }
 
-    def useRepoBuilder(RepoBuilder builder) {
+    public useRepoBuilder(RepoBuilder builder) {
         this.repoBuilder = builder
     }
 
-    def useScheduler(Scheduler scheduler) {
+    public useScheduler(Scheduler scheduler) {
         this.scheduler = scheduler
     }
 
-    def useThreadPoolBuilder(BasicThreadPoolBuilder builder) {
+    public useThreadPoolBuilder(BasicThreadPoolBuilder builder) {
         this.threadPoolBuilder = builder
     }
 
-    Repository repo(String name) {
+    public Repository repo(String name) {
         processors[name] instanceof Aggregator ? ((Aggregator) processors[name]).repo : null
     }
 
-    def doEvery(int frequency, TimeUnit unit, Runnable task, Opts opts = new Opts()) {
+    public doEvery(int frequency, TimeUnit unit, Runnable task, Opts opts = new Opts()) {
         doEvery(frequency, unit, { task.run() }, opts)
     }
 
-    def doEvery(Map opts = [:], int frequency, TimeUnit unit, Closure task) {
+    public doEvery(Map opts = [:], int frequency, TimeUnit unit, Closure task) {
         doEvery(frequency, unit, task, new Opts(opts))
     }
 
-    def doEvery(int frequency, TimeUnit unit, Closure task, Opts opts) {
+    public doEvery(int frequency, TimeUnit unit, Closure task, Opts opts) {
         scheduler = scheduler ?: new SchedulerImpl(name, repoBuilder.build('__scheduler__', opts))
         scheduler.addJob(frequency, unit, task, opts)
     }
 
-    Aggregator aggregator(String name, Filter filter, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
+    public synchronized Aggregator aggregator(String name, Filter filter, AggregationKey<E> key,
+                                              AggregationStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
         this.broadcasters[name] = getOrCreateBroadcaster(name)
         this.opts[name] = opts
+        this.queues[name] = buildQueue(name, opts)
         this.processors[name] = new Aggregator(
                 name: name,
                 router: this,
                 filter: filter,
                 repo: repoBuilder.build(name, opts),
-                queue: buildQueue(name, opts),
                 executor: buildExecutor(opts),
                 strategy: strategy,
                 key: key
         )
     }
 
-    Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy, Opts opts) {
+    public synchronized Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy, Opts opts) {
         this.broadcasters[name] = getOrCreateBroadcaster(name)
         this.opts[name] = opts
+        this.queues[name] = buildQueue(name, opts)
         this.processors[name] = new Processor(
                 name: name,
                 router: this,
                 filter: filter,
-                queue: buildQueue(name, opts),
                 executor: buildExecutor(opts),
                 strategy: strategy,
         )
     }
 
-    Aggregator aggregator(String name, AggregationKey<E> key = { String.valueOf(it) }, Opts opts) {
+    public Aggregator aggregator(String name, AggregationKey<E> key = { String.valueOf(it) }, Opts opts) {
         aggregator(name, null, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), opts)
     }
 
-    Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key = { String.valueOf(it) }) {
+    public Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key = { String.valueOf(it) }) {
         aggregator(name, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), new Opts(opts))
     }
 
-    Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts) {
+    public Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts) {
         aggregator(name, null, key, strategy, opts)
     }
 
-    Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key, AggregationStrategy<E> strategy) {
+    public Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key, AggregationStrategy<E> strategy) {
         aggregator(name, key, strategy, new Opts(opts))
     }
 
-    Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy) {
+    public Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy) {
         processor(name, filter, strategy, DEFAULT_OPTS)
     }
 
-    Processor processor(String name, ProcessingStrategy<E> strategy, Opts opts) {
+    public Processor processor(String name, ProcessingStrategy<E> strategy, Opts opts) {
         processor(name, null, strategy, opts)
     }
 
-    Processor processor(String name, Closure strategy, Opts opts) {
+    public Processor processor(String name, Closure strategy, Opts opts) {
         processor(name, process(strategy), opts)
     }
 
-    Processor processor(Map opts = [:], String name, Closure strategy) {
+    public Processor processor(Map opts = [:], String name, Closure strategy) {
         processor(name, strategy, new Opts(opts))
     }
 
-    Processor processor(Map opts = [:], String name, ProcessingStrategy<E> strategy) {
+    public Processor processor(Map opts = [:], String name, ProcessingStrategy<E> strategy) {
         processor(name, strategy, new Opts(opts))
     }
 
-    Processor processor(Map opts = [:], String name) {
+    public Processor processor(Map opts = [:], String name) {
         processor(name, { it } as ProcessingStrategy<E>, new Opts(opts))
     }
 

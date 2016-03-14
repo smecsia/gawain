@@ -13,6 +13,6 @@ class ActivemqQueueBuilder extends AbstractActivemqBuilder implements QueueBuild
 
     @Override
     GawainQueue build(String name, int maxSize) {
-        new ActivemqQueue(name, session, new Opts(maxQueueSize: maxSize))
+        new ActivemqQueue(name, connectionFactory, new Opts(maxQueueSize: maxSize))
     }
 }

@@ -9,4 +9,5 @@ import groovy.transform.CompileStatic
 interface Broadcaster<T> {
 
     def broadcast(T event)
+
 }
