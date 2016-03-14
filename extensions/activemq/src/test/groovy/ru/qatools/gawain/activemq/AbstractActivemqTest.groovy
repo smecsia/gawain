@@ -1,22 +1,24 @@
 package ru.qatools.gawain.activemq
+
 import groovy.transform.CompileStatic
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.junit.BeforeClass
+import org.junit.Before
 import ru.qatools.gawain.activemq.util.ActivemqEmbeddedService
 
 import static java.lang.Runtime.getRuntime
 import static ru.qatools.gawain.util.SocketUtil.findFreePort
+
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
 abstract class AbstractActivemqTest {
 
-    protected static ActivemqEmbeddedService activemq
-    public static final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory()
+    protected ActivemqEmbeddedService activemq
+    public final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory()
 
-    @BeforeClass
-    public static synchronized void setUpClass() throws Exception {
+    @Before
+    public synchronized void setUp() throws Exception {
         if (activemq == null) {
             def brokerURL = "tcp://localhost:${findFreePort()}"
             activemq = new ActivemqEmbeddedService(brokerURL, "testActivemq")
@@ -26,11 +28,11 @@ abstract class AbstractActivemqTest {
         }
     }
 
-    protected static ActivemqQueueBuilder activemqQueueBuilder() {
+    protected ActivemqQueueBuilder activemqQueueBuilder() {
         new ActivemqQueueBuilder(factory)
     }
 
-    protected static ActivemqBroadcastBuilder activemqBroadcastBuilder() {
+    protected ActivemqBroadcastBuilder activemqBroadcastBuilder() {
         new ActivemqBroadcastBuilder(factory)
     }
 }
