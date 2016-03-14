@@ -85,7 +85,7 @@ class GawainTest {
 
     @Test
     public void testCustomScheduler() throws Exception {
-        def scheduler = mock(Scheduler.class)
+        def scheduler = mock(Scheduler)
         Gawain.run {
             useScheduler(scheduler)
             doEvery 300, MILLISECONDS, {}
@@ -97,7 +97,7 @@ class GawainTest {
 
     @Test
     public void testCustomRepoBuilder() throws Exception {
-        def repo = mock(Repository.class)
+        def repo = mock(Repository)
         def gawain = Gawain.run {
             useRepoBuilder({ name, opts -> repo } as RepoBuilder)
             aggregator 'input', key { 'all' }, aggregate { state, evt -> state.evt = evt }
@@ -108,8 +108,10 @@ class GawainTest {
 
     @Test
     public void testCustomQueueBuilder() throws Exception {
-        def queue = mock(GawainQueue.class)
-        when(queue.take()).thenAnswer({ sleep(10000) })
+        def queue = mock(GawainQueue)
+        def consumer = mock(GawainQueueConsumer)
+        when(queue.buildConsumer()).thenReturn(consumer)
+        when(consumer.consume()).thenAnswer({ sleep(10000) })
         def gawain = Gawain.run {
             useQueueBuilder([build: { name, size -> queue }] as QueueBuilder)
             aggregator 'input', key { 'all' }, aggregate { state, evt -> state.evt = evt }
@@ -120,7 +122,7 @@ class GawainTest {
 
     @Test
     public void testCustomThreadpoolBuilder() throws Exception {
-        def executor = mock(ExecutorService.class)
+        def executor = mock(ExecutorService)
         def gawain = Gawain.run {
             useThreadPoolBuilder({ executor } as BasicThreadPoolBuilder)
             aggregator 'input', key { 'all' }, aggregate { state, evt -> state.evt = evt }
