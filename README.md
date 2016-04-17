@@ -4,13 +4,16 @@ Microframework focusing on data processing and aggregation in distributed enviro
 
 ## Features
 
-* Distributed processing and aggregation with many threads
-* Consistent aggregations 
+* Distributed processing and aggregation with the usage of many threads/processes
+* Aggregation data is stored into different storages (e.g. databases)
+* Messages broadcasting within cluster
+* Distributed pessimistic locking for each aggregation key during aggregation
+* Distributed scheduler, that can perform tasks on every node or just on the master node
 
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:1.0'
+    compile 'ru.qatools:gawain:0.1-alpha'
 ```
 
 ## Usage
@@ -28,6 +31,7 @@ on any node of the cluster and thus must be performed concurrently. Gawain uses 
 * `repository` is a storage for states. It can be in-memory or can represent the distributed map of values.
 * `timer` is a scheduled job, which can perform any operations periodically with given schedule.
 
+The example:
 ```groovy
 def gawain = Gawain.run {
     processor('male', filter { it != 'Ivanov' }, process { "Mr. ${it}" }).to('people')
@@ -41,10 +45,19 @@ def gawain = Gawain.run {
 // feeding up the queues with events
 ['Ivanov', 'Petrov', 'Sidorov'].each { gawain.to('male', it) }
 ['Ivanova', 'Petrova'].each { gawain.to('female', it) }
-// when processing is completed
-// this will print "Mr. Petrov, Mr. Sidorov, Mrs. Ivanova, Mrs. Petrova"
+
+// when processing is completed the following line will print 
+// "Mr. Petrov, Mr. Sidorov, Mrs. Ivanova, Mrs. Petrova"
 println(gawain.repo('people').keys())
 ```
+
+### Cluster
+
+Gawain's main purpose is to handle processing and aggregation jobs, to process the queues of messages and then to store aggregation results 
+into database. All the operations can be performed in parallel on different nodes of the cluster. Usually all cluster nodes are euqal. 
+There is no "Master" node for processing and aggregation. The exception is the distributed scheduler that can be performed on master node only.  
+Besides that, nodes may be configured differently (for example, they can have different count of queue consumers, depending on the resources (e.g. CPU/Memory)). 
+All nodes may be (or not) connected to a single instance of message queue broker (e.g. ActiveMQ) or to a single data storage (e.g. MongoDB/Relational database).
 
 ### Routing
 
@@ -62,8 +75,8 @@ processor('proc3', { it / 2 }).to('aggregator')
 aggregator('aggregator')
 ```
 
-The code above allows to perform some calculations on values and then store them within repository. 
-For example if we send value `2` to `proc1` then repository for `aggregator` will contain value `1.5`.
+The code above allows to perform some calculations on values and then store them within the repository. 
+For example, if we send value `2` to `proc1` then repository for `aggregator` will contain value `1.5`.
 
 Route can be conditional or unconditional. To specify a condition, you can use `to` or `broadcast` 
 methods directly from processor being based on message value:
@@ -86,8 +99,8 @@ broker (e.g. ActiveMQ or MongoDB), then all the nodes of the cluster will receiv
 next processor on every cluster node (one time for each node).
 
 ```groovy
-processor('launcher').broadcast('proc')
-processor 'proc', { println('Launching proc on every cluster node') }
+processor('launcher').broadcast('launch')
+processor 'launch', { println('Launching command ${it} on every cluster node...') }
 ```
 
 ### Scheduled processors
@@ -129,9 +142,9 @@ node only) you should pass 'global' option in definition:
 doEvery(100, MILLISECONDS, { println("Hello from master node!" }, global: true)
 ```
 
-### Use from java code
+### Usage from java code
 
-Gawain easily integrates with java code. The main difference is due to the difference in Java lambda and Groovy closure. 
+Gawain easily integrates with java code. The main difference is due to the difference in Java lambdas and Groovy closures. 
 In Java you have to use the router reference within lambdas:
 
 ```java

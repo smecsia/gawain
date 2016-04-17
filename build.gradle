@@ -1,7 +1,4 @@
-subprojects {
-    group 'ru.qatools'
-    version '1.0-SNAPSHOT'
-
+allprojects {
     apply plugin: 'groovy'
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -27,4 +24,6 @@ subprojects {
         testCompile 'org.hamcrest:hamcrest-all:1.3'
         testCompile 'com.jayway.awaitility:awaitility-groovy:1.7.0'
     }
+
+    apply from: rootDir.path + '/release.gradle'
 }
