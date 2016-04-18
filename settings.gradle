@@ -4,9 +4,9 @@ include 'core'
 include 'extensions/mongodb'
 include 'extensions/activemq'
 include 'extensions/jdbc'
-findProject(':extensions')?.name = 'gawain-extensions'
-findProject(':extensions:mongodb')?.name = 'gawain-mongodb'
-findProject(':extensions:activemq')?.name = 'gawain-activemq'
-findProject(':extensions:jdbc')?.name = 'gawain-jdbc'
-findProject(':core')?.name = 'gawain-core'
 
+[':core',':extensions', ':extensions:mongodb', ':extensions:activemq', ':extensions:jdbc'].forEach { module ->
+    def name = module.split(':').last()
+    findProject(module)?.name = "gawain-${name}"
+    findProject(module)?.version = VERSION_NAME
+}

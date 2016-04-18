@@ -67,6 +67,16 @@ afterEvaluate { project ->
                         }
                     }
                 }
+
+                pom.withXml {
+                    asNode().dependencies.'*'.findAll() {
+                        it.groupId.text() == rootProject.name
+                    }.each() {
+                        println "Fixing version & groupId for module deps of subproject ${project.name}..."
+                        it.groupId*.value = GROUP
+                        it.version*.value = VERSION_NAME
+                    }
+                }
             }
         }
     }
