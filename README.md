@@ -1,5 +1,6 @@
 # Gawain
-
+<img src="https://farm9.staticflickr.com/8425/7663862222_2ebf44e5e8_o.jpg" width="150px"/> <br/>
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.smecsia.gawain/gawain/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/me.smecsia.gawain/gawain)<br/>
 Microframework focusing on data processing and aggregation in distributed environment
 
 ## Features
