@@ -5,6 +5,9 @@ allprojects {
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
+    group = GROUP
+    version = VERSION_NAME
+    archivesBaseName = POM_ARTIFACT_ID
 
     repositories {
         mavenLocal()

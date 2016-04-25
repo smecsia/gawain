@@ -3,7 +3,9 @@ package me.smecsia.gawain.jdbc
 import groovy.transform.CompileStatic
 import me.smecsia.gawain.Opts
 import me.smecsia.gawain.Repository
+import me.smecsia.gawain.serialize.ToBytesStateSerializer
 import me.smecsia.gawain.builders.RepoBuilder
+import me.smecsia.gawain.error.InitializationException
 import me.smecsia.gawain.jdbc.dialect.BasicDialect
 import me.smecsia.gawain.jdbc.dialect.Dialect
 
@@ -34,6 +36,11 @@ class JDBCRepoBuilder implements RepoBuilder {
 
     @Override
     Repository build(String name, Opts opts) {
-        new JDBCRepo(name, locking, opts.maxLockWaitMs, opts.serializer)
+        if (!(opts.stateSerializer instanceof ToBytesStateSerializer)) {
+            throw new InitializationException("Cannot use ${opts.stateSerializer}! " +
+                    "JDBCRepo supports only serialization to bytes")
+        } else {
+        }
+        new JDBCRepo(name, locking, opts.maxLockWaitMs, opts.stateSerializer as ToBytesStateSerializer)
     }
 }

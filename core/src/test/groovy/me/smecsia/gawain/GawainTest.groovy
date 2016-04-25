@@ -1,10 +1,13 @@
 package me.smecsia.gawain
 
-import org.junit.Test
 import me.smecsia.gawain.beans.User
 import me.smecsia.gawain.builders.BasicThreadPoolBuilder
 import me.smecsia.gawain.builders.QueueBuilder
 import me.smecsia.gawain.builders.RepoBuilder
+import me.smecsia.gawain.error.UnknownProcessorException
+import me.smecsia.gawain.serialize.ToStringStateSerializer
+import org.junit.Test
+import org.mockito.ArgumentCaptor
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicInteger
@@ -17,7 +20,6 @@ import static org.junit.Assert.assertThat
 import static org.mockito.Matchers.any
 import static org.mockito.Matchers.eq
 import static org.mockito.Mockito.*
-
 /**
  * @author Ilya Sadykov
  */
@@ -261,4 +263,37 @@ class GawainTest {
 
     }
 
+    @Test
+    public void testFailOnMissingQueueFalse() throws Exception {
+        def gawain = Gawain.run {
+            failOnMissingQueue(false)
+            processor 'existing'
+        }
+        gawain.to('not-existing', 'message')
+    }
+
+    @Test(expected = UnknownProcessorException)
+    public void testFailOnMissingQueue() throws Exception {
+        def gawain = Gawain.run {
+            processor 'existing'
+        }
+        gawain.to('not-existing', 'message')
+    }
+
+    @Test
+    public void testOverrideSerializer() throws Exception {
+        def serializer = mock(ToStringStateSerializer)
+        def repoBuilder = mock(RepoBuilder)
+        def opts = new Opts(stateSerializer: serializer)
+        Gawain.run {
+            defaultOpts(opts)
+            useRepoBuilder(repoBuilder)
+            aggregator 'input', key { 'all' }, aggregate { s, e ->
+                println("got event ${e}")
+            }
+        }
+        ArgumentCaptor<Opts> captor = new ArgumentCaptor<>()
+        verify(repoBuilder).build(eq('input'), captor.capture())
+        assertThat(captor.getValue().stateSerializer, is(serializer))
+    }
 }

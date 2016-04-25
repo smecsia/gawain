@@ -1,5 +1,6 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'maven-publish'
 
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
@@ -100,4 +101,14 @@ afterEvaluate { project ->
         archives sourcesJar
         archives javadocsJar
     }
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
 }

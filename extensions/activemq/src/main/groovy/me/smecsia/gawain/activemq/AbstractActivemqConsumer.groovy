@@ -1,22 +1,26 @@
 package me.smecsia.gawain.activemq
+
 import groovy.transform.CompileStatic
+import me.smecsia.gawain.Opts
+import me.smecsia.gawain.serialize.ToBytesMessageSerializer
 import org.apache.activemq.ActiveMQConnection
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import me.smecsia.gawain.Opts
-import me.smecsia.gawain.Serializer
 
 import javax.jms.DeliveryMode
 import javax.jms.Destination
 import javax.jms.MessageProducer
 import javax.jms.Session
+
+import static me.smecsia.gawain.activemq.ActivemqUtil.ensureBytesSerializer
+
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
 abstract class AbstractActivemqConsumer<T> {
-    final Serializer<T> serializer
+    final ToBytesMessageSerializer<T> serializer
     final Logger LOGGER = LoggerFactory.getLogger(getClass())
     final String name
     final Opts opts
@@ -31,7 +35,7 @@ abstract class AbstractActivemqConsumer<T> {
         this.name = name
         this.opts = opts
         this.factory = factory
-        this.serializer = opts.serializer
+        this.serializer = ensureBytesSerializer(opts.messageSerializer)
         LOGGER.debug("Creating producer connection to ${factory.brokerURL}...")
         destination = initDestination(session = newSession(factory), name)
         producer = session.createProducer(this.destination)
@@ -43,7 +47,7 @@ abstract class AbstractActivemqConsumer<T> {
 
     protected void produce(T event) {
         def message = session.createBytesMessage()
-        message.writeBytes(serializer.toBytes(event))
+        message.writeBytes(serializer.serialize(event))
         producer.send(message)
     }
 

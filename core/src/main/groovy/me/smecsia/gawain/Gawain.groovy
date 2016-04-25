@@ -1,20 +1,19 @@
 package me.smecsia.gawain
 
 import groovy.transform.CompileStatic
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import me.smecsia.gawain.builders.*
 import me.smecsia.gawain.error.UnknownProcessorException
 import me.smecsia.gawain.impl.*
 import me.smecsia.gawain.java.GawainRun
 import me.smecsia.gawain.java.Router
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
 import static java.lang.System.currentTimeMillis
-import static me.smecsia.gawain.util.Util.opt
 
 /**
  * @author Ilya Sadykov
@@ -26,6 +25,7 @@ class Gawain<E> implements Router<E> {
     public static final String DEFAULT_NAME = "router"
     final String name
     private volatile boolean started
+    private boolean failOnMissingQueue = true
     private Map<String, Processor> processors = [:]
     private Map<String, List<ExecutorService>> threadpools = [:]
     private Map<String, GawainQueue<E>> queues = [:]
@@ -36,6 +36,7 @@ class Gawain<E> implements Router<E> {
     private BroadcastBuilder bcBuilder = new BasicBroadcastBuilder()
     private ThreadPoolBuilder threadPoolBuilder = new BasicThreadPoolBuilder()
     private Scheduler scheduler
+    private Opts defaultOpts = DEFAULT_OPTS
 
     private Gawain(String name) {
         this.name = name
@@ -82,13 +83,30 @@ class Gawain<E> implements Router<E> {
     // DSL
 
     public to(String name, E event) {
-        opt(queues[name]).orElseThrow({
-            new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
-        }).add(event)
+        if (!queues.containsKey(name)) {
+            if (failOnMissingQueue) {
+                throw new UnknownProcessorException("No processor with name '${name}' found for event ${event}")
+            } else {
+                queues.put(name, buildQueue(name))
+            }
+        }
+        queues[name].add(event)
+    }
+
+    public defaultOpts(Opts opts) {
+        this.defaultOpts = opts
+    }
+
+    public defaultOpts(Map opts) {
+        this.defaultOpts = optsWithDefault(opts)
     }
 
     public broadcast(String name, E event) {
         getOrCreateBroadcaster(name).broadcast(event)
+    }
+
+    public failOnMissingQueue(boolean value) {
+        this.failOnMissingQueue = value
     }
 
     public useBroadcastBuilder(BroadcastBuilder builder) {
@@ -107,7 +125,7 @@ class Gawain<E> implements Router<E> {
         this.scheduler = scheduler
     }
 
-    public useThreadPoolBuilder(BasicThreadPoolBuilder builder) {
+    public useThreadPoolBuilder(ThreadPoolBuilder builder) {
         this.threadPoolBuilder = builder
     }
 
@@ -115,12 +133,12 @@ class Gawain<E> implements Router<E> {
         processors[name] instanceof Aggregator ? ((Aggregator) processors[name]).repo : null
     }
 
-    public doEvery(int frequency, TimeUnit unit, Runnable task, Opts opts = new Opts()) {
+    public doEvery(int frequency, TimeUnit unit, Runnable task, Opts opts = defaultOpts()) {
         doEvery(frequency, unit, { task.run() }, opts)
     }
 
     public doEvery(Map opts = [:], int frequency, TimeUnit unit, Closure task) {
-        doEvery(frequency, unit, task, new Opts(opts))
+        doEvery(frequency, unit, task, optsWithDefault(opts))
     }
 
     public doEvery(int frequency, TimeUnit unit, Closure task, Opts opts) {
@@ -129,7 +147,7 @@ class Gawain<E> implements Router<E> {
     }
 
     public synchronized Aggregator aggregator(String name, Filter filter, AggregationKey<E> key,
-                                              AggregationStrategy<E> strategy, Opts opts = DEFAULT_OPTS) {
+                                              AggregationStrategy<E> strategy, Opts opts = defaultOpts()) {
         this.broadcasters[name] = getOrCreateBroadcaster(name)
         this.opts[name] = opts
         this.queues[name] = buildQueue(name, opts)
@@ -162,7 +180,7 @@ class Gawain<E> implements Router<E> {
     }
 
     public Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key = { String.valueOf(it) }) {
-        aggregator(name, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), new Opts(opts))
+        aggregator(name, key, aggregate({ s, E e -> s['value'] = key.calculate(e) }), optsWithDefault(opts))
     }
 
     public Aggregator aggregator(String name, AggregationKey<E> key, AggregationStrategy<E> strategy, Opts opts) {
@@ -170,11 +188,11 @@ class Gawain<E> implements Router<E> {
     }
 
     public Aggregator aggregator(Map opts = [:], String name, AggregationKey<E> key, AggregationStrategy<E> strategy) {
-        aggregator(name, key, strategy, new Opts(opts))
+        aggregator(name, key, strategy, optsWithDefault(opts))
     }
 
     public Processor processor(String name, Filter filter, ProcessingStrategy<E> strategy) {
-        processor(name, filter, strategy, DEFAULT_OPTS)
+        processor(name, filter, strategy, defaultOpts())
     }
 
     public Processor processor(String name, ProcessingStrategy<E> strategy, Opts opts) {
@@ -186,32 +204,40 @@ class Gawain<E> implements Router<E> {
     }
 
     public Processor processor(Map opts = [:], String name, Closure strategy) {
-        processor(name, strategy, new Opts(opts))
+        processor(name, strategy, optsWithDefault(opts))
     }
 
     public Processor processor(Map opts = [:], String name, ProcessingStrategy<E> strategy) {
-        processor(name, strategy, new Opts(opts))
+        processor(name, strategy, optsWithDefault(opts))
     }
 
     public Processor processor(Map opts = [:], String name) {
-        processor(name, { it } as ProcessingStrategy<E>, new Opts(opts))
+        processor(name, { it } as ProcessingStrategy<E>, optsWithDefault(opts))
     }
 
     // Protected
+
+    protected Opts optsWithDefault(Map opts) {
+        this.defaultOpts.clone().set(opts)
+    }
+
+    protected Opts defaultOpts() {
+        this.defaultOpts
+    }
 
     protected Broadcaster getOrCreateBroadcaster(String target) {
         broadcasters[target] ?: (broadcasters[target] = bcBuilder.build(target, this, opts(target)))
     }
 
     protected Opts opts(String target) {
-        opts[target] ?: DEFAULT_OPTS
+        opts[target] ?: defaultOpts
     }
 
     protected ExecutorService buildExecutor(Opts opts) {
         threadPoolBuilder.build(opts.processors)
     }
 
-    protected GawainQueue buildQueue(String name, Opts opts) {
+    protected GawainQueue buildQueue(String name, Opts opts = DEFAULT_OPTS) {
         queueBuilder.build(name, opts.maxQueueSize)
     }
 

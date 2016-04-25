@@ -1,7 +1,8 @@
 package me.smecsia.gawain.mongodb
 
-import org.junit.Test
 import me.smecsia.gawain.Gawain
+import me.smecsia.gawain.jackson.JacksonStateSerializer
+import org.junit.Test
 
 import static com.jayway.awaitility.Awaitility.await
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -15,14 +16,32 @@ import static org.junit.Assert.assertThat
 class MongodbRepoTest extends AbstractMongoTest {
 
     @Test
-    public void testMongoDbRepo() throws Exception {
+    public void testMongoDbRepoWithJackson() throws Exception {
+        def gawain = Gawain.run {
+            defaultOpts(stateSerializer: new JacksonStateSerializer())
+            useRepoBuilder(mongoRepoBuilder())
+            mainRoute(it)
+        }
+        performTest(gawain)
+    }
+
+    @Test
+    public void testMongoDbRepoWithBytes() throws Exception {
         def gawain = Gawain.run {
             useRepoBuilder(mongoRepoBuilder())
-            processor('input', { it }).to('users')
-            aggregator 'users', key { 'all' }, aggregate { state, evt ->
-                state.users = (state.users ?: []) + [evt]
-            }
+            mainRoute(it)
         }
+        performTest(gawain)
+    }
+
+    static def mainRoute(Gawain g) {
+        g.processor('input', { it }).to('users')
+        g.aggregator 'users', g.key { 'all' }, g.aggregate { state, evt ->
+            state.users = (state.users ?: []) + [evt]
+        }
+    }
+
+    static def performTest(Gawain gawain) {
         gawain.to('input', [name: 'Vasya', lastName: 'Fedorov'])
         gawain.to('input', [name: 'Petya', lastName: 'Makarov'])
         gawain.to('input', [name: 'Sergey', lastName: 'Vasilyev'])

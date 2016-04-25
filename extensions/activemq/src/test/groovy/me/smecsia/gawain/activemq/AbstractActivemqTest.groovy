@@ -1,13 +1,11 @@
 package me.smecsia.gawain.activemq
 
 import groovy.transform.CompileStatic
+import me.smecsia.gawain.activemq.util.ActivemqEmbeddedService
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.junit.Before
-import me.smecsia.gawain.activemq.util.ActivemqEmbeddedService
 
-import static java.lang.Runtime.getRuntime
 import static me.smecsia.gawain.util.SocketUtil.findFreePort
-
 /**
  * @author Ilya Sadykov
  */
@@ -23,7 +21,7 @@ abstract class AbstractActivemqTest {
             def brokerURL = "tcp://localhost:${findFreePort()}"
             activemq = new ActivemqEmbeddedService(brokerURL, "testActivemq")
             activemq.start();
-            getRuntime().addShutdownHook({ activemq.stop() });
+            addShutdownHook({ activemq.stop() });
             factory.brokerURL = brokerURL
         }
     }

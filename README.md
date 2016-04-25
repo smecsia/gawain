@@ -14,7 +14,7 @@ Microframework focusing on data processing and aggregation in distributed enviro
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:0.1.2'
+    compile 'ru.qatools:gawain:0.1.3'
 ```
 
 ## Usage
@@ -188,6 +188,8 @@ Default value: 10
 sometimes cannot handle all of them. This option allows to limit the maximum messages within queue. 
 Newer messages will be dropped if queue is full. This option may lead to inconsistency. It is disabled
 by default.
+* `stateSerializer` - Allows to set the serializer for the state
+* `messageSerializer` - Allows to set the serializer for the events
 
 
 
@@ -242,6 +244,26 @@ Gawain.run {
     // All nodes connected to the same MongoDB will be listening all broadcasting events
 }
 ```
+
+### Setting the default options
+
+```groovy
+// ... 
+Gawain.run {
+    defaultOpts(stateSerializer: new JacksonStateSerializer())
+    // defining your own scheduler implementation
+    useScheduler(new MySchedulerImplementation())
+    // defining your own queue builder
+    useQueueBuilder(new MyQueueBuilder())
+    // defining your own thread pool builder
+    useThreadPoolBuilder(new MyThreadPoolBuilder())
+    // defining the behaviour when unknown queue name appears in route
+    // if false no exception is raised
+    failOnMissingQueue(false)
+    // ...
+}
+```
+
 
 ### JDBC database (MySQL, PostgreSQL, H2) as a repository (and distributed locks engine)
 

@@ -1,5 +1,6 @@
 dependencies {
     compile project(":gawain-core")
     compile 'ru.qatools:pessimistic-mongodb:1.9'
+    testCompile project(":extensions/jackson")
     testCompile 'ru.yandex.qatools.embed:embedded-services:1.20'
 }

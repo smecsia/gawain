@@ -1,0 +1,9 @@
+def jacksonVersion = '2.7.3'
+dependencies {
+    compile project(":gawain-core")
+    compile 'ru.qatools:pessimistic-mongodb:1.9'
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
+    testCompile 'ru.yandex.qatools.embed:embedded-services:1.20'
+}

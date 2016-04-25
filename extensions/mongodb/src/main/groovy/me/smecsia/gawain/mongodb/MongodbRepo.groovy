@@ -1,24 +1,17 @@
 package me.smecsia.gawain.mongodb
 
-import com.mongodb.BasicDBObject
 import com.mongodb.MongoClient
-import com.mongodb.util.JSON
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
-import org.bson.Document
 import me.smecsia.gawain.Opts
 import me.smecsia.gawain.Repository
 import me.smecsia.gawain.error.LockWaitTimeoutException
 import ru.qatools.mongodb.MongoPessimisticLocking
 import ru.qatools.mongodb.MongoPessimisticRepo
-
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
 class MongodbRepo implements Repository {
-    private static final JsonSlurper jsonParser = new JsonSlurper()
     long maxLockWaitMs
     MongoPessimisticLocking locking
     MongoPessimisticRepo<Map> repo
@@ -27,12 +20,9 @@ class MongodbRepo implements Repository {
         locking = new MongoPessimisticLocking(client, dbName, colName, (opts['pollIntMs'] ?: 10L) as long)
         repo = new MongoPessimisticRepo<>(locking, Map)
         maxLockWaitMs = opts.maxLockWaitMs
-        repo.setSerializer({ state ->
-            (BasicDBObject) JSON.parse(JsonOutput.toJson(state))
-        })
-        repo.setDeserializer({ Document input, clazz ->
-            jsonParser.parseText(input.toJson())
-        })
+        def serializer = new MongodbSerializer(opts)
+        repo.setSerializer(serializer)
+        repo.setDeserializer(serializer)
     }
 
     @Override

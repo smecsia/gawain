@@ -1,14 +1,18 @@
 package me.smecsia.gawain.mongodb
 
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientURI
+import groovy.transform.CompileStatic
+import org.junit.Before
 import org.junit.BeforeClass
 import ru.yandex.qatools.embed.service.MongoEmbeddedService
 
 import static de.flapdoodle.embed.mongo.distribution.Version.Main.PRODUCTION
 import static me.smecsia.gawain.util.SocketUtil.findFreePort
-
 /**
  * @author Ilya Sadykov
  */
+@CompileStatic
 abstract class AbstractMongoTest {
 
     static final String RS_NAME = "local"
@@ -30,6 +34,15 @@ abstract class AbstractMongoTest {
             URL = "mongodb://${USER}:${PASS}@${mongo.getHost()}:" +
                     "${mongo.getPort()}/${DB}?replicaSet=${RS_NAME}&w=majority"
             addShutdownHook { mongo.stop() }
+        }
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        def client = new MongoClient(new MongoClientURI(URL))
+        def db = client.getDatabase(DB)
+        for(String col : db.listCollectionNames()){
+            db.getCollection(col).drop()
         }
     }
 

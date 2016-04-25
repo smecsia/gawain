@@ -4,8 +4,10 @@ include 'core'
 include 'extensions/mongodb'
 include 'extensions/activemq'
 include 'extensions/jdbc'
+include 'extensions/jackson'
 
-[':core',':extensions', ':extensions:mongodb', ':extensions:activemq', ':extensions:jdbc'].forEach { module ->
+[':core',':extensions', ':extensions:mongodb',
+ ':extensions:activemq', ':extensions:jdbc', ':extensions:jackson'].forEach { module ->
     def name = module.split(':').last()
     findProject(module)?.name = "gawain-${name}"
     findProject(module)?.version = VERSION_NAME
