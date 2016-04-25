@@ -191,13 +191,33 @@ by default.
 * `stateSerializer` - Allows to set the serializer for the state
 * `messageSerializer` - Allows to set the serializer for the events
 
+### Setting the default options
+
+```groovy
+// ... 
+Gawain.run {
+    // overriding the default options
+    defaultOpts(stateSerializer: new JacksonStateSerializer())
+    // defining your own scheduler implementation
+    useScheduler(new MySchedulerImplementation())
+    // defining your own queue builder
+    useQueueBuilder(new MyQueueBuilder())
+    // defining your own thread pool builder
+    useThreadPoolBuilder(new MyThreadPoolBuilder())
+    // defining the behaviour when unknown queue name appears in route
+    // if false no exception is raised
+    failOnMissingQueue(false)
+    // ...
+}
+```
+
 
 
 ### ActiveMQ as a message broker and broadcaster
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-activemq:1.0'
+compile 'ru.qatools:gawain-activemq:1.3'
 ```
 
 Somewhere in your code:
@@ -223,9 +243,11 @@ Gawain.run {
 
 ### MongoDB as a repository and broadcaster (and also as a distributed locks engine)
 
+
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-mongodb:1.0'
+compile 'ru.qatools:gawain-mongodb:1.3'
+compile 'ru.qatools:gawain-jackson:1.3'
 ```
 
 Somewhere in your code:
@@ -234,6 +256,8 @@ Somewhere in your code:
 def dbURL = 'mongodb://user:password@localhost:27017/database?w=majority'
 def dbName = 'database'
 Gawain.run {
+    // setting Jackson as a serializer of the states
+    defaultOpts(stateSerializer: new JacksonStateSerializer())
      useRepoBuilder(
         new MongodbRepoBuilder(dbURL, dbName)
      )
@@ -245,31 +269,12 @@ Gawain.run {
 }
 ```
 
-### Setting the default options
-
-```groovy
-// ... 
-Gawain.run {
-    defaultOpts(stateSerializer: new JacksonStateSerializer())
-    // defining your own scheduler implementation
-    useScheduler(new MySchedulerImplementation())
-    // defining your own queue builder
-    useQueueBuilder(new MyQueueBuilder())
-    // defining your own thread pool builder
-    useThreadPoolBuilder(new MyThreadPoolBuilder())
-    // defining the behaviour when unknown queue name appears in route
-    // if false no exception is raised
-    failOnMissingQueue(false)
-    // ...
-}
-```
-
 
 ### JDBC database (MySQL, PostgreSQL, H2) as a repository (and distributed locks engine)
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-jdbc:1.0'
+compile 'ru.qatools:gawain-jdbc:1.3'
 ```
 
 For H2 database:
