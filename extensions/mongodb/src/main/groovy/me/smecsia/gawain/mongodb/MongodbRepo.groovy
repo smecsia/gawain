@@ -7,22 +7,31 @@ import me.smecsia.gawain.Repository
 import me.smecsia.gawain.error.LockWaitTimeoutException
 import ru.qatools.mongodb.MongoPessimisticLocking
 import ru.qatools.mongodb.MongoPessimisticRepo
+
+import static ru.qatools.mongodb.MongoPessimisticRepo.COLL_SUFFIX
+
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
 class MongodbRepo implements Repository {
-    long maxLockWaitMs
-    MongoPessimisticLocking locking
-    MongoPessimisticRepo<Map> repo
+    final long maxLockWaitMs
+    final MongoPessimisticLocking locking
+    final MongoPessimisticRepo<Map> repo
+    final MongoClient mongo
+    final String dbName
+    final String colName
 
-    MongodbRepo(MongoClient client, String dbName, String colName, Opts opts = new Opts()) {
-        locking = new MongoPessimisticLocking(client, dbName, colName, (opts['pollIntMs'] ?: 10L) as long)
-        repo = new MongoPessimisticRepo<>(locking, Map)
-        maxLockWaitMs = opts.maxLockWaitMs
+    MongodbRepo(MongoClient mongo, String dbName, String colName, Opts opts = new Opts()) {
+        this.locking = new MongoPessimisticLocking(mongo, dbName, colName, (opts['pollIntMs'] ?: 10L) as long)
+        this.repo = new MongoPessimisticRepo<>(locking, Map)
+        this.maxLockWaitMs = opts.maxLockWaitMs
         def serializer = new MongodbSerializer(opts)
-        repo.setSerializer(serializer)
-        repo.setDeserializer(serializer)
+        this.repo.setSerializer(serializer)
+        this.repo.setDeserializer(serializer)
+        this.mongo = mongo
+        this.dbName = dbName
+        this.colName = colName
     }
 
     @Override
@@ -91,5 +100,10 @@ class MongodbRepo implements Repository {
     @Override
     def deleteAndUnlock(String key) {
         repo.removeAndUnlock(key)
+    }
+
+    @Override
+    def clear() {
+        mongo.getDatabase(dbName).getCollection("${colName}${COLL_SUFFIX}").drop()
     }
 }

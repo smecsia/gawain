@@ -26,6 +26,8 @@ interface Dialect {
 
     void remove(String tableName, String key, Connection conn) throws SQLException
 
+    void clear(String tableName, Connection conn) throws SQLException
+
     byte[] get(String tableName, String key, Connection conn) throws SQLException
 
     Collection<String> keys(String tableName, Connection conn) throws SQLException

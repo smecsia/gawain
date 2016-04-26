@@ -98,6 +98,11 @@ trait Repository {
     abstract def deleteAndUnlock(String key)
 
     /**
+     * Clears repository from all the data
+     */
+    abstract def clear()
+
+    /**
      * Helper interface to perform some actions on state with proper locking
      */
     static interface StateClosure {

@@ -98,4 +98,9 @@ class JDBCRepo implements Repository {
     def deleteAndUnlock(String key) {
         locking.dialect.remove(tableName, key, locking.connection)
     }
+
+    @Override
+    def clear() {
+        locking.dialect.clear(tableName, locking.connection)
+    }
 }

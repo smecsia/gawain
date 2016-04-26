@@ -7,7 +7,9 @@ import org.junit.Test
 import static com.jayway.awaitility.Awaitility.await
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.hamcrest.Matchers.containsInAnyOrder
+import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.is
 import static org.junit.Assert.assertThat
 
 /**
@@ -48,5 +50,7 @@ class MongodbRepoTest extends AbstractMongoTest {
         await().atMost(5, SECONDS).until({ gawain.repo('users')['all']?.users?.size() }, equalTo(3))
         assertThat(gawain.repo('users')['all']
                 .users.collect({ it.name }), containsInAnyOrder('Vasya', 'Petya', 'Sergey'))
+        gawain.repo('users').clear()
+        assertThat(gawain.repo('users').keys(), is(empty()))
     }
 }

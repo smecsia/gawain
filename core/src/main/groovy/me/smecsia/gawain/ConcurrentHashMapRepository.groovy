@@ -103,6 +103,11 @@ class ConcurrentHashMapRepository implements Repository {
         unlock(key)
     }
 
+    @Override
+    def clear() {
+        map.clear()
+    }
+
     private synchronized Semaphore getLock(String key) {
         if (!locks.containsKey(key)) {
             locks.put(key, new Semaphore(1))

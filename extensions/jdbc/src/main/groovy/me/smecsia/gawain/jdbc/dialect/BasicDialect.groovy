@@ -65,6 +65,11 @@ class BasicDialect implements Dialect {
     }
 
     @Override
+    void clear(String tableName, Connection conn) throws SQLException {
+        conn.createStatement().executeUpdate("DELETE FROM ${table(tableName)}")
+    }
+
+    @Override
     byte[] get(String tableName, String key, Connection conn) throws SQLException {
         def statement = conn.createStatement()
         statement.execute("SELECT object FROM ${table(tableName)} WHERE ${field("key")} = '${key}'")

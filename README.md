@@ -14,7 +14,7 @@ Microframework focusing on data processing and aggregation in distributed enviro
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:0.1.4'
+    compile 'ru.qatools:gawain:0.1.5'
 ```
 
 ## Usage
@@ -217,7 +217,7 @@ Gawain.run {
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-activemq:1.3'
+compile 'ru.qatools:gawain-activemq:0.1.5'
 ```
 
 Somewhere in your code:
@@ -246,8 +246,8 @@ Gawain.run {
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-mongodb:1.3'
-compile 'ru.qatools:gawain-jackson:1.3'
+compile 'ru.qatools:gawain-mongodb:0.1.5'
+compile 'ru.qatools:gawain-jackson:0.1.5'
 ```
 
 Somewhere in your code:
@@ -274,7 +274,7 @@ Gawain.run {
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-jdbc:1.3'
+compile 'ru.qatools:gawain-jdbc:0.1.5'
 ```
 
 For H2 database:
