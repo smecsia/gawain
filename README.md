@@ -14,7 +14,7 @@ Microframework focusing on data processing and aggregation in distributed enviro
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:0.1.3'
+    compile 'ru.qatools:gawain:0.1.4'
 ```
 
 ## Usage

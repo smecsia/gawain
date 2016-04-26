@@ -24,7 +24,7 @@ class SchedulerImpl implements Scheduler {
     static final Logger LOGGER = LoggerFactory.getLogger(SchedulerImpl)
     public static final String LOCK_KEY = 'GawainScheduler'
     public static final int HB_INTERVAL_MS = 5000
-    public static final int MAX_NO_HB_INTERVAL_MS = 2000
+    public static final int MAX_NO_HB_INTERVAL_MS = 10000
     public static final int MAX_INITIAL_DELAY_MS = 100
     List<Job> globalJobs = []
     List<Job> localJobs = []
