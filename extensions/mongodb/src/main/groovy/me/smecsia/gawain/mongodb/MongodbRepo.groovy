@@ -84,12 +84,17 @@ class MongodbRepo implements Repository {
 
     @Override
     void unlock(String key) {
-        repo.getLock().forceUnlock(key)
+        repo.getLock().unlock(key)
     }
 
     @Override
     Map putAndUnlock(String key, Map value) {
         repo.putAndUnlock(key, value); value
+    }
+
+    @Override
+    void forceUnlock(String key) {
+        repo.getLock().forceUnlock(key)
     }
 
     @Override

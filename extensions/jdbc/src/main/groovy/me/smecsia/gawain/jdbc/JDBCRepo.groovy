@@ -89,6 +89,11 @@ class JDBCRepo implements Repository {
     }
 
     @Override
+    void forceUnlock(String key) {
+        locking.forceUnlock(key)
+    }
+
+    @Override
     Map put(String key, Map value) {
         locking.dialect.put(tableName, key, locking.connection, serializer.serialize(value))
         value

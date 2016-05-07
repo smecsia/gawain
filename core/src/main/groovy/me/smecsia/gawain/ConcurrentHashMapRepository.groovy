@@ -78,6 +78,12 @@ class ConcurrentHashMapRepository implements Repository {
     }
 
     @Override
+    void forceUnlock(String key) {
+        LOGGER.trace("forceUnlock key '${key}'")
+        getLock(key).release()
+    }
+
+    @Override
     Map put(String key, Map value) {
         LOGGER.trace("put key '${key}' value '${value}")
         map.put(key, value)

@@ -54,6 +54,10 @@ class JDBCPessimisticLocking {
         throw new LockWaitTimeoutException("Failed to lock key '${key}' within ${timeoutMs}ms")
     }
 
+    void forceUnlock(String key) {
+        dialect.forceUnlock(tableName, key, connection)
+    }
+
     void unlock(String key) throws InvalidLockOwnerException {
         try {
             LOGGER.trace("Trying to unlock key ${key}")

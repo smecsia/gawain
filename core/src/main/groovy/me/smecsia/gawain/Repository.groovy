@@ -88,6 +88,11 @@ trait Repository {
     abstract Map putAndUnlock(String key, Map value)
 
     /**
+     * Forcing unlock of the key
+     */
+    abstract void forceUnlock(String key)
+
+    /**
      * Putting key to map without unlocking it
      */
     abstract Map put(String key, Map value)

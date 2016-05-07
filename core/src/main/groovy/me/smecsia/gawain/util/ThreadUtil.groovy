@@ -1,4 +1,4 @@
-package me.smecsia.gawain.jdbc.util
+package me.smecsia.gawain.util
 
 import groovy.transform.CompileStatic
 

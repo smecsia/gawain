@@ -2,16 +2,17 @@ package me.smecsia.gawain.jackson
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.transform.CompileStatic
-import me.smecsia.gawain.serialize.ToStringStateSerializer
+import me.smecsia.gawain.serialize.ToJsonStateSerializer
 
+import static me.smecsia.gawain.util.StringUtil.isEmpty
 /**
  * @author Ilya Sadykov
  */
 @CompileStatic
-class JacksonStateSerializer implements ToStringStateSerializer {
+class JacksonStateSerializer implements ToJsonStateSerializer {
     private final ObjectMapper objectMapper
 
-    JacksonStateSerializer(ObjectMapperProvider provider = new ObjectMapperProvider()) {
+    JacksonStateSerializer(GawainObjectMapperProvider provider = new GawainObjectMapperProvider()) {
         this.objectMapper = provider.provide()
     }
 
@@ -22,6 +23,6 @@ class JacksonStateSerializer implements ToStringStateSerializer {
 
     @Override
     Map deserialize(String serializedObject) {
-        objectMapper.readValue(serializedObject, Map)
+        isEmpty(serializedObject) ?  null : objectMapper.readValue(serializedObject, Map)
     }
 }

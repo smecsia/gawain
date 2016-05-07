@@ -14,7 +14,7 @@ Microframework focusing on data processing and aggregation in distributed enviro
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:0.1.5'
+    compile 'ru.qatools:gawain:0.1.6'
 ```
 
 ## Usage
@@ -217,7 +217,7 @@ Gawain.run {
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-activemq:0.1.5'
+compile 'ru.qatools:gawain-activemq:0.1.6'
 ```
 
 Somewhere in your code:
@@ -246,8 +246,8 @@ Gawain.run {
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-mongodb:0.1.5'
-compile 'ru.qatools:gawain-jackson:0.1.5'
+compile 'ru.qatools:gawain-mongodb:0.1.6'
+compile 'ru.qatools:gawain-jackson:0.1.6'
 ```
 
 Somewhere in your code:
@@ -269,12 +269,33 @@ Gawain.run {
 }
 ```
 
+### ElasticSearch as a repository (and distributed locks engine)
+
+build.gradle
+```groovy
+compile 'ru.qatools:gawain-elasticsearch:0.1.6'
+compile 'ru.qatools:gawain-jackson:0.1.6'
+```
+
+Somewhere in your code:
+```groovy
+// ... 
+Gawain.run {
+     // setting Jackson as a serializer of the states
+     defaultOpts(stateSerializer: new JacksonStateSerializer())
+     useRepoBuilder(
+           new ElasticRepoBuilder(elasticClient, 'indexName')
+     )
+     // Now all the data of aggregators will be stored within ElasticSearch
+}
+```
+
 
 ### JDBC database (MySQL, PostgreSQL, H2) as a repository (and distributed locks engine)
 
 build.gradle
 ```groovy
-compile 'ru.qatools:gawain-jdbc:0.1.5'
+compile 'ru.qatools:gawain-jdbc:0.1.6'
 ```
 
 For H2 database:

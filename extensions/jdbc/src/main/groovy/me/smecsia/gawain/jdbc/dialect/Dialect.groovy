@@ -18,6 +18,8 @@ interface Dialect {
 
     void tryUnlock(String tableName, String key, Connection conn) throws SQLException
 
+    void forceUnlock(String tableName, String key, Connection conn) throws SQLException
+
     boolean isLocked(String tableName, String key, Connection conn) throws SQLException
 
     boolean isLockedByMe(String tableName, String key, Connection conn) throws SQLException
