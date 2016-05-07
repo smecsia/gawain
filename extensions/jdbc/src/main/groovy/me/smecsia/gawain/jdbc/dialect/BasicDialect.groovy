@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 import java.sql.Connection
 import java.sql.SQLException
 
-import static me.smecsia.gawain.jdbc.util.ThreadUtil.threadId
+import static me.smecsia.gawain.util.ThreadUtil.threadId
 
 /**
  * @author Ilya Sadykov
@@ -32,6 +32,11 @@ class BasicDialect implements Dialect {
     @Override
     void tryUnlock(String tableName, String key, Connection conn) throws SQLException {
         conn.createStatement().execute(removeLockSQL(tableName, key));
+    }
+
+    @Override
+    void forceUnlock(String tableName, String key, Connection conn) throws SQLException {
+        conn.createStatement().execute(forceRemoveLockSQL(tableName, key));
     }
 
     @Override
@@ -144,6 +149,12 @@ class BasicDialect implements Dialect {
     }
 
     protected String removeLockSQL(String tableName, String key) {
+        """
+            DELETE FROM ${table(tableName)} WHERE ${field("key")}='${key}' AND ${field('thread_id')}='${threadId()}'
+        """
+    }
+
+    protected String forceRemoveLockSQL(String tableName, String key) {
         """
             DELETE FROM ${table(tableName)} WHERE ${field("key")}='${key}'
         """

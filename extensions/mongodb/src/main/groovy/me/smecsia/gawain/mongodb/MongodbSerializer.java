@@ -4,8 +4,9 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.util.JSON;
 import me.smecsia.gawain.Opts;
+import me.smecsia.gawain.error.GawainRuntimeException;
 import me.smecsia.gawain.serialize.ToBytesStateSerializer;
-import me.smecsia.gawain.serialize.ToStringStateSerializer;
+import me.smecsia.gawain.serialize.ToJsonStateSerializer;
 import org.bson.Document;
 import org.bson.types.Binary;
 import ru.qatools.mongodb.Deserializer;
@@ -43,7 +44,7 @@ public class MongodbSerializer implements Serializer, Deserializer {
     private Serializer serialize() {
         if (gawainSerializer instanceof ToBytesStateSerializer) {
             return (object) -> new BasicDBObject(OBJECT_FIELD, gawainSerializer.serialize(object));
-        } else if (gawainSerializer instanceof ToStringStateSerializer) {
+        } else if (gawainSerializer instanceof ToJsonStateSerializer) {
             return (object) -> new BasicDBObject(OBJECT_FIELD, JSON.parse(
                     (String) gawainSerializer.serialize(object)));
         } else {
@@ -54,7 +55,7 @@ public class MongodbSerializer implements Serializer, Deserializer {
     private <T> Deserializer deserialize() {
         if (gawainSerializer instanceof ToBytesStateSerializer) {
             return this::objectFromBytes;
-        } else if (gawainSerializer instanceof ToStringStateSerializer) {
+        } else if (gawainSerializer instanceof ToJsonStateSerializer) {
             return this::objectFromString;
         }
         return SerializeUtil::objectFromBytes;
@@ -68,8 +69,13 @@ public class MongodbSerializer implements Serializer, Deserializer {
             final BasicDBList list = new BasicDBList();
             list.addAll((List) object);
             return (T) gawainSerializer.deserialize(list.toString());
+        } else if (object instanceof Document) {
+            return (T) gawainSerializer.deserialize(((Document) object).toJson());
+        } else if (object == null) {
+            return null;
         }
-        return (T) gawainSerializer.deserialize(input.toJson());
+        throw new GawainRuntimeException("Failed to deserialize Bson document " +
+                "('object' field must be a valid document or null!): " + input.toJson());
     }
 
     private <T> T objectFromBytes(Document input, Class<T> expectedClass) throws Exception {

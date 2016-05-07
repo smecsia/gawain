@@ -1,0 +1,8 @@
+dependencies {
+    compile project(':gawain-core')
+    compile project(':gawain-core')
+    compile 'org.elasticsearch:elasticsearch:2.2.1'
+    testCompile project(':extensions/jackson')
+    testCompile 'commons-io:commons-io:2.4'
+    testCompile 'org.elasticsearch.module:lang-groovy:2.2.1'
+}

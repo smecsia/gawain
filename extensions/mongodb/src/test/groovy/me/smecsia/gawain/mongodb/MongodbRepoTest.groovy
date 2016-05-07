@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder
 import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.nullValue
 import static org.junit.Assert.assertThat
 
 /**
@@ -25,6 +26,8 @@ class MongodbRepoTest extends AbstractMongoTest {
             mainRoute(it)
         }
         performTest(gawain)
+        gawain.repo('users').put('key', null)
+        assertThat(gawain.repo('users').get('key'), is(nullValue()))
     }
 
     @Test
@@ -47,7 +50,7 @@ class MongodbRepoTest extends AbstractMongoTest {
         gawain.to('input', [name: 'Vasya', lastName: 'Fedorov'])
         gawain.to('input', [name: 'Petya', lastName: 'Makarov'])
         gawain.to('input', [name: 'Sergey', lastName: 'Vasilyev'])
-        await().atMost(5, SECONDS).until({ gawain.repo('users')['all']?.users?.size() }, equalTo(3))
+        await().atMost(400, SECONDS).until({ gawain.repo('users')['all']?.users?.size() }, equalTo(3))
         assertThat(gawain.repo('users')['all']
                 .users.collect({ it.name }), containsInAnyOrder('Vasya', 'Petya', 'Sergey'))
         gawain.repo('users').clear()

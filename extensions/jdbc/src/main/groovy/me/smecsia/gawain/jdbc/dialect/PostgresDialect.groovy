@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import java.sql.Connection
 import java.sql.SQLException
 
-import static me.smecsia.gawain.jdbc.util.ThreadUtil.threadId
+import static me.smecsia.gawain.util.ThreadUtil.threadId
 
 /**
  * @author Ilya Sadykov
