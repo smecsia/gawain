@@ -12,6 +12,6 @@ class FilterImpl<E> implements Filter<E> {
 
     @Override
     boolean filter(E event) {
-        event.with(callback)
+        callback.call(event)
     }
 }

@@ -13,6 +13,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
+import static groovy.lang.Closure.DELEGATE_FIRST
 import static java.lang.System.currentTimeMillis
 
 /**
@@ -199,11 +200,11 @@ class Gawain<E> implements Router<E> {
         processor(name, null, strategy, opts)
     }
 
-    public Processor processor(String name, Closure strategy, Opts opts) {
+    public Processor processor(String name, @DelegatesTo(Gawain) Closure strategy, Opts opts) {
         processor(name, process(strategy), opts)
     }
 
-    public Processor processor(Map opts = [:], String name, Closure strategy) {
+    public Processor processor(Map opts = [:], String name, @DelegatesTo(Gawain) Closure strategy) {
         processor(name, strategy, optsWithDefault(opts))
     }
 
@@ -243,8 +244,10 @@ class Gawain<E> implements Router<E> {
 
     // Static DSL
 
-    static <E> Gawain<E> run(String name, Closure strategy = {}, boolean startConsumers = true) {
+    static <E> Gawain<E> run(String name, @DelegatesTo(Gawain) Closure strategy = {}, boolean startConsumers = true) {
         def instance = new Gawain(name)
+        strategy.delegate = instance
+        strategy.resolveStrategy = DELEGATE_FIRST
         instance.with(strategy)
         if (startConsumers) {
             instance.start()
@@ -252,7 +255,7 @@ class Gawain<E> implements Router<E> {
         instance
     }
 
-    static <E> Gawain<E> run(Closure strategy = {}) {
+    static <E> Gawain<E> run(@DelegatesTo(Gawain) Closure strategy = {}) {
         run(DEFAULT_NAME, strategy)
     }
 

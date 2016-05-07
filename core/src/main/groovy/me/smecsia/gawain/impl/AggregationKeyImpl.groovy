@@ -12,6 +12,6 @@ class AggregationKeyImpl<T> implements AggregationKey<T> {
 
     @Override
     String calculate(T event) {
-        event.with(callback)
+        callback.call(event)
     }
 }

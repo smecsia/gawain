@@ -12,6 +12,6 @@ class ProcessingStrategyImpl<T> implements ProcessingStrategy<T> {
 
     @Override
     T process(T event) {
-        event.with(callback)
+        callback.call(event)
     }
 }
