@@ -138,6 +138,14 @@ class Gawain<E> implements Router<E> {
         doEvery(frequency, unit, { task.run() }, opts)
     }
 
+    public doEvery(int frequency, TimeUnit unit, Opts opts, Runnable task) {
+        doEvery(frequency, unit, { task.run() }, opts)
+    }
+
+    public doEvery(int frequency, TimeUnit unit, Map opts, Closure task) {
+        doEvery(frequency, unit, task, optsWithDefault(opts))
+    }
+
     public doEvery(Map opts = [:], int frequency, TimeUnit unit, Closure task) {
         doEvery(frequency, unit, task, optsWithDefault(opts))
     }
