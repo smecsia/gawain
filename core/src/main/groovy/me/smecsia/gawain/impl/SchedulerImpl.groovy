@@ -125,7 +125,7 @@ class SchedulerImpl implements Scheduler {
                 LOGGER.debug("[${name}] Still waiting for master scheduler to release the lock...")
                 if (lastHb() < currentTimeMillis() - maxNoHBMs) {
                     LOGGER.warn("[${name}] Last heartbeat is older than ${maxNoHBMs}ms, forcing unlock")
-                    timerRepo.unlock(LOCK_KEY)
+                    timerRepo.forceUnlock(LOCK_KEY)
                 }
             } catch (Exception e) {
                 LOGGER.error("[${name}] Error while waiting for master scheduler to release the lock", e)
