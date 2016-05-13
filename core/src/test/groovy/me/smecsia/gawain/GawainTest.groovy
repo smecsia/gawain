@@ -284,7 +284,7 @@ class GawainTest {
     public void testOverrideSerializer() throws Exception {
         def serializer = mock(ToStringStateSerializer)
         def repoBuilder = mock(RepoBuilder)
-        def opts = new Opts(stateSerializer: serializer)
+        def opts = new Opts(stateSerializer: serializer, maxQueueSize: 10)
         Gawain.run {
             defaultOpts(opts)
             useRepoBuilder(repoBuilder)

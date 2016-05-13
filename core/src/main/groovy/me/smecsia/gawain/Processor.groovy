@@ -1,26 +1,19 @@
 package me.smecsia.gawain
 
 import groovy.transform.CompileStatic
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
-
+import groovy.util.logging.Slf4j
 /**
  * @author Ilya Sadykov
  */
+@Slf4j('LOG')
 @CompileStatic
 class Processor {
-    final Logger LOG = LoggerFactory.getLogger(this.class)
     Gawain router
     String name
     List<Closure<Object>> outputs = []
-    ExecutorService executor
     Filter filter
     volatile boolean stopped = false
     private ProcessingStrategy strategy
-    long terminationWaitMs = 100
 
     protected processNext(event) {
         strategy.process(event)
@@ -36,13 +29,11 @@ class Processor {
             LOG.debug("[{}][{}#{}] processing event {}", router.name, name, idx, event)
             try {
                 if (!filter || filter.filter(event)) {
-                    executor.submit {
-                        try {
-                            def outEvent = processNext(event)
-                            outputs.each { it(outEvent) }
-                        } catch (e) {
-                            LOG.error("[{}][{}] failed to process event {}", router.name, name, event, e)
-                        }
+                    try {
+                        def outEvent = processNext(event)
+                        outputs.each { it(outEvent) }
+                    } catch (e) {
+                        LOG.error("[{}][{}] failed to process event {}", router.name, name, event, e)
                     }
                 } else {
                     LOG.debug("[{}][{}] event filtered: {}", router.name, name, event)
@@ -51,7 +42,6 @@ class Processor {
                 LOG.error("[{}][{}] failed to filter/process event {}", router.name, name, event, e)
             }
         }
-        executor.awaitTermination(terminationWaitMs, TimeUnit.MILLISECONDS)
     }
 
     public Processor to(String... names) {

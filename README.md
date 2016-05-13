@@ -171,13 +171,10 @@ gawain.to("male", "Petrov");
 ### Processors & Aggregators options
 
 You can specify a number of options for processors and aggregators:
-* `consumers` - Limits the queue consumers count. Specifies the number of concurrently performing consumers. 
-Default value: 1.
+* `consumers` - Limits the queue consumers count. Specifies the number of concurrently performing queue consumers. 
+Each consumer thread is a single processor or aggregator. Default value: 1.
 * `bcConsumers` - Limits the number of concurrently performing consumers for broadcasted messages. 
 Default value: 1.
-* `processors` - Processing thread pool size. Sets the maximum processing threads for incoming messages.
-This option specifies the number of concurrently processing messages per consumer. 
-Default value: 10.
 * `maxLockWaitMs` - Specifies maximum time in which the lock must be obtained. This option allows to prevent the 
 deadlocks when one of the consumers is locked for a long time.
 Default value: 30000.

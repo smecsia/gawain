@@ -19,7 +19,6 @@ import static me.smecsia.gawain.serialize.Serializer.DEFAULT_STATE_SERIALIZER
 class Opts implements Serializable {
     private final Map<String, Object> opts = [:]
     int maxQueueSize = 0,               // max size for the queue
-        processors = 10,                // max count of processor threads
         consumers = 1,                  // max count of queue consumer threads
         bcConsumers = 1,                // max count of broadcaster queue consumer threads
         maxLockWaitMs = 30000           // max time to wait until lock is available

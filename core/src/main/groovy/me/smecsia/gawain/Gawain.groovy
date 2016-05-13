@@ -165,7 +165,6 @@ class Gawain<E> implements Router<E> {
                 router: this,
                 filter: filter,
                 repo: repoBuilder.build(name, opts),
-                executor: buildExecutor(opts),
                 strategy: strategy,
                 key: key
         )
@@ -179,7 +178,6 @@ class Gawain<E> implements Router<E> {
                 name: name,
                 router: this,
                 filter: filter,
-                executor: buildExecutor(opts),
                 strategy: strategy,
         )
     }
@@ -240,10 +238,6 @@ class Gawain<E> implements Router<E> {
 
     protected Opts opts(String target) {
         opts[target] ?: defaultOpts
-    }
-
-    protected ExecutorService buildExecutor(Opts opts) {
-        threadPoolBuilder.build(opts.processors)
     }
 
     protected GawainQueue buildQueue(String name, Opts opts = DEFAULT_OPTS) {
