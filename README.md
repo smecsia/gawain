@@ -14,7 +14,7 @@ Microframework focusing on data processing and aggregation in distributed enviro
 ## Setup
 build.gradle
 ```groovy
-    compile 'ru.qatools:gawain:0.1.8'
+    compile 'me.smecsia.gawain:0.1.9'
 ```
 
 ## Usage
